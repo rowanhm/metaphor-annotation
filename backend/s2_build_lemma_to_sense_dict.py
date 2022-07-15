@@ -1,70 +1,40 @@
-# TODO add homograph info
-
-# Extract wn definitions
 from collections import defaultdict
 from nltk.corpus import wordnet as wn
 
-from backend.common.common import save_pickle, info, open_pickle
-from backend.common.global_variables import lemmas_to_senses_py_file
+from backend.common.common import open_dict_csv, info, save_pickle
+from backend.common.global_variables import raw_data_dir, lemmas_to_senses_py_file
 
-pos_lookup = {
-    'n': 'noun',
-    'v': 'verb',
-    'a': 'adj',
-    's': 'adj',
-    'r': 'adv'
-}
+lemma_assignments = open_dict_csv(raw_data_dir + 'within_pos_clusters.csv')
 
-info('Generating dictionary')
-wn_dict = defaultdict(list)
-word_pos_options = defaultdict(set)
-all_lemma_ids = set()
+info('Extracting')
+lemmas_to_senses = defaultdict(set)
+for lemma_assignment in lemma_assignments:
+    sense_id = lemma_assignment['wn_sense']
+    lemma_id = lemma_assignment['lemma']
+    lemmas_to_senses[lemma_id].add(sense_id)
 
-# Build list of all lemmas
-for synset in wn.all_synsets():
+info('Filtering monosemes')
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    if len(sense_ids) >= 1:
+        lemmas_to_senses_filtered[lemma_id] = sense_ids
 
-    # Attempt to filter Proper Nouns and phrases
-    lemmas = {l for l in synset.lemmas() if (l.name().lower() == l.name() and '_' not in l.name())}
-    if len(lemmas) == 0:
-        continue
-
-    for lemma in lemmas:
-        sense_id = lemma.key()
-        lemma_name = lemma.name()
-        pos = pos_lookup[synset.pos()]
-
-        assert sense_id not in all_lemma_ids
-        all_lemma_ids.add(lemma_name)
-
-        wn_dict[(lemma_name, pos)].append(sense_id)
-
-        word_pos_options[lemma_name].add(pos)
-
-info('Filtering monosemous words')
-overall_num_senses = 0
-filtered_num_senses = 0
-for lemma, pos_options in word_pos_options.items():
-    assert len(pos_options) > 0
-    num_senses = 0
-    for pos in pos_options:
-        pos_senses = len(wn_dict[(lemma, pos)])
-        assert pos_senses > 0
-        num_senses += pos_senses
-
-    overall_num_senses += num_senses
-
-    if num_senses == 1:  # Monosemous
-        filtered_num_senses += 1
-        for pos in pos_options:
-            del wn_dict[(lemma, pos)]
-
-info(f'Filtered {filtered_num_senses}/{overall_num_senses} senses, leaving {overall_num_senses-filtered_num_senses}')
-
-wn_dict_flat = {}
-for (lemma, pos), senses in wn_dict.items():
-    wn_dict_flat[lemma+':'+pos] = senses
+info('Ordering')
+lemmas_to_senses_ordered = {}
+for lemma_id, sense_ids in lemmas_to_senses_filtered.items():
+    word, pos, index = lemma_id.split('.')
+    synsets = wn.synsets(word)
+    # all_lemmas = []
+    # for synset in synsets:
+    #     all_lemmas += [lemma for lemma in synset.lemmas() if lemma.name().lower() == word]
+    sense_ids_ordered = []
+    for sense in wn.lemmas(word):
+        sense_id = sense.key()
+        if sense_id in sense_ids and sense_id not in sense_ids_ordered:
+            sense_ids_ordered.append(sense_id)
+    assert set(sense_ids_ordered) == sense_ids, f'{sense_ids_ordered} != {sense_ids}'
+    assert len(sense_ids_ordered) == len(set(sense_ids_ordered))
+    lemmas_to_senses_ordered[lemma_id] = sense_ids_ordered
 
 info('Saving')
-save_pickle(lemmas_to_senses_py_file, wn_dict_flat)
-
-info('Done')
+save_pickle(lemmas_to_senses_py_file, lemmas_to_senses_ordered)
