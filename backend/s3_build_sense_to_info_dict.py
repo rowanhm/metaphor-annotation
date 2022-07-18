@@ -23,7 +23,7 @@ for synset in wn.all_synsets():
             word = sense.name()
             assert sense.synset() == synset
             concept_id = synset.name()
-            synonyms = [(info.name(), info.key()) for info in synset.lemmas() if info.name() != word]
+            synonyms = [{"string": info.name(), "sense_id": info.key()} for info in synset.lemmas() if info.name() != word]
 
             sense_to_info[sense_id] = {
                 'examples': example_map[sense_id],

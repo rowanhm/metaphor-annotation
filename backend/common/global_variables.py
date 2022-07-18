@@ -14,3 +14,7 @@ example_sentences_file_princeton = raw_data_dir + 'example_sentences_princeton.p
 lemmas_to_senses_js_file = extracted_data_dir + 'lemmas_to_senses.json'
 concepts_to_definitions_js_file = extracted_data_dir + 'concepts_to_definitions.json'
 senses_to_info_js_file = extracted_data_dir + 'senses_to_info.json'
+
+lemmas_to_senses_dir = extracted_data_dir + 'lemmas_to_senses/'
+concepts_to_definitions_dir = extracted_data_dir + 'concepts_to_definitions/'
+senses_to_info_dir = extracted_data_dir + 'senses_to_info/'
