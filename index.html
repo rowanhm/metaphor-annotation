@@ -4,12 +4,17 @@
 </head>
 
 <script type = "text/javascript">
-    async function hello(){
-        let response = await fetch('test.json');
+    async function load_json(file){
+        let response = await fetch(file);
         // read response stream as json
-        data = await response.text();
+        return await response.text()
+    }
+    async function hello(){
+        let concepts_to_definitions = await load_json(`/data/extracted/concepts_to_definitions.json`);
+        let lemmas_to_senses = await load_json("/data/extracted/lemmas_to_senses.json");
+        let senses_to_info = await load_json("/data/extracted/senses_to_info.json");
         const element = document.getElementById("main");
-        element.innerHTML = data;
+        element.innerHTML = 'hello';
     }
     window.onload = hello;
 </script>
