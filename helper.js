@@ -14,7 +14,7 @@ async function load_json(file) {
 }
 
 async function render() {
-    // TODO update this to load definitions
+    // TODO update this to dynamically select which definition
     let lemma = 'train.noun.1'
 
     // Load info
@@ -149,15 +149,20 @@ async function render() {
 
         let metaphor_info = document.createElement("td")
         metaphor_info.style.padding = `0 ${cell_horizontal_spacing}`
-        let metaphor_info_para = document.createElement('p')
+        let top_line = document.createElement('nobr')
         // metaphor_info_para.style.maxWidth = '280px'
-        let dropdown = document.createElement("span")
+        let dropdown = document.createElement("nobr")
         dropdown.id = `dropdown_${sense}`
-        metaphor_info_para.appendChild(dropdown)
-        let similarity = document.createElement("span")
+        top_line.appendChild(dropdown)
+        let dropdown_follow_on = document.createElement("span")
+        dropdown_follow_on.id = `dropdown_followon_${sense}`
+        top_line.appendChild(dropdown_follow_on)
+        top_line.innerHTML += '<br>'
+        metaphor_info.appendChild(top_line)
+
+        let similarity = document.createElement("nobr")
         similarity.id = `similarity_${sense}`
-        metaphor_info_para.appendChild(similarity)
-        metaphor_info.appendChild(metaphor_info_para)
+        metaphor_info.appendChild(similarity)
         row.appendChild(metaphor_info)
 
         index++;
@@ -283,12 +288,16 @@ function show_similarity(sense) {
     if(select.selectedIndex <=0) {
         // Nothing selected
         document.getElementById(`similarity_${sense}`).innerHTML = ''
+        document.getElementById(`dropdown_followon_${sense}`).innerHTML = ''
+
     } else {
         // Add text box
         let similarity = document.createElement('input')
         similarity.type = 'text'
+        let follow_on = document.getElementById(`dropdown_followon_${sense}`)
+        follow_on.innerHTML += ' because'
         let insert_point = document.getElementById(`similarity_${sense}`)
-        insert_point.innerHTML = ' because<br>they both '
+        insert_point.innerHTML = 'they both '
         insert_point.appendChild(similarity)
         insert_point.innerHTML += '.'
     }
