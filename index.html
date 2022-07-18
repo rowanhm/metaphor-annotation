@@ -1,11 +1,17 @@
 <html>
 <head>
-    <script type="text/javascript" src="helper.js"></script>
-    <title>Test</title>
+    <title>Stub Test</title>
 </head>
 
 <script type = "text/javascript">
-    window.onload = render;
+    async function hello(){
+        let response = await fetch('test.json');
+        // read response stream as json
+        data = await response.text();
+        const element = document.getElementById("main");
+        element.innerHTML = data;
+    }
+    window.onload = hello;
 </script>
 
 <div id="main"></div>
