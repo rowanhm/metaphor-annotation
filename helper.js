@@ -52,7 +52,7 @@ async function render() {
     // Header
     let header_row = document.createElement("tr")
     header_row.style.borderTop = '2px solid black'
-    const headers = ['ID', 'Definition', 'Label', 'Extra Information']
+    const headers = ['ID', 'Definition', 'Label', 'Extra&nbsp;Information']
     for (const header of headers) {
         let cell = document.createElement("td")
         cell.style.padding = `0 ${cell_horizontal_spacing}`
