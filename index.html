@@ -10,11 +10,11 @@
         return await response.text()
     }
     async function hello(){
-        let concepts_to_definitions = await load_json(`/data/extracted/concepts_to_definitions.json`);
-        let lemmas_to_senses = await load_json("/data/extracted/lemmas_to_senses.json");
-        let senses_to_info = await load_json("/data/extracted/senses_to_info.json");
+        // let concepts_to_definitions = await load_json(`/data/extracted/concepts_to_definitions.json`);
+        // let lemmas_to_senses = await load_json("/data/extracted/lemmas_to_senses.json");
+        let senses_to_info = await load_json("https://rowanhm.github.io/metaphor-annotation/data/extracted/senses_to_info.json");
         const element = document.getElementById("main");
-        element.innerHTML = senses_to_info.slice(1000,1100) + '<br>' + lemmas_to_senses.slice(1000,1100) + '<br>'  + concepts_to_definitions.slice(1000,1100)
+        element.innerHTML = senses_to_info.slice(1000,1100) // + '<br>' + lemmas_to_senses.slice(1000,1100) + '<br>'  + concepts_to_definitions.slice(1000,1100)
     }
     window.onload = hello;
 </script>
