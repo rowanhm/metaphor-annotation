@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Stub Test</title>
+    <title>II Test</title>
 </head>
 
 <script type = "text/javascript">
@@ -14,7 +14,7 @@
         let lemmas_to_senses = await load_json("/data/extracted/lemmas_to_senses.json");
         let senses_to_info = await load_json("/data/extracted/senses_to_info.json");
         const element = document.getElementById("main");
-        element.innerHTML = senses_to_info.charAt(1000) + lemmas_to_senses.charAt(1000)  + concepts_to_definitions.charAt(1000) ;
+        element.innerHTML = senses_to_info.charAt(2000) + lemmas_to_senses.charAt(2000)  + concepts_to_definitions.charAt(2000) ;
     }
     window.onload = hello;
 </script>
