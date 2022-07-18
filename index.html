@@ -14,7 +14,7 @@
         let lemmas_to_senses = await load_json("/data/extracted/lemmas_to_senses.json");
         let senses_to_info = await load_json("/data/extracted/senses_to_info.json");
         const element = document.getElementById("main");
-        element.innerHTML = 'hello';
+        element.innerHTML = senses_to_info.charAt(1000) + lemmas_to_senses.charAt(1000)  + concepts_to_definitions.charAt(1000) ;
     }
     window.onload = hello;
 </script>
