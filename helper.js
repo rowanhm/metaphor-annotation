@@ -18,9 +18,9 @@ async function render() {
     let lemma = 'train.noun.1'
 
     // Load info
-    let concepts_to_definitions = await load_json(`/data/extracted/concepts_to_definitions.json`);
-    let lemmas_to_senses = await load_json("/data/extracted/lemmas_to_senses.json");
-    let senses_to_info = await load_json("/data/extracted/senses_to_info.json");
+    let concepts_to_definitions = await load_json("data/extracted/concepts_to_definitions.json");
+    let lemmas_to_senses = await load_json("data/extracted/lemmas_to_senses.json");
+    let senses_to_info = await load_json("data/extracted/senses_to_info.json");
 
     const sense_ids = lemmas_to_senses[lemma]
 
