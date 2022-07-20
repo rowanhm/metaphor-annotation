@@ -1,4 +1,4 @@
-import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-database.js'
+// import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-database.js'
 
 let all_senses = null
 let literal_mixed_senses = new Set();
@@ -7,14 +7,14 @@ const label_options = ["Literal", "Mixed", "Metaphorical"]
 const cell_horizontal_spacing = '20px'
 
 // TODO update this to save_lemma
-function writeUserData(userId, name, email, imageUrl) {
+/*function writeUserData(userId, name, email, imageUrl) {
     const db = getDatabase();
     set(ref(db, 'users/' + userId), {
         username: name,
         email: email,
         profile_picture : imageUrl
     });
-}
+}*/
 
 async function load_json(file) {
     let response = await fetch(file);
