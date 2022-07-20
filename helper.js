@@ -319,4 +319,4 @@ function show_similarity(sense) {
     }
 }
 
-window.render = render;
+// window.render = render;
