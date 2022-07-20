@@ -18,3 +18,10 @@ senses_to_info_js_file = extracted_data_dir + 'senses_to_info.json'
 lemmas_to_senses_dir = extracted_data_dir + 'lemmas_to_senses/'
 concepts_to_definitions_dir = extracted_data_dir + 'concepts_to_definitions/'
 senses_to_info_dir = extracted_data_dir + 'senses_to_info/'
+
+queues_js_file = extracted_data_dir + 'queues.json'
+
+# Parameters
+QUEUE_LENGTH = 100
+MIN_SENSES = 2
+MAX_SENSES = 10
