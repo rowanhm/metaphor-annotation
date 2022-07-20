@@ -1,0 +1,7 @@
+{
+  "name": "metaphor-annotation",
+  "version": "1.0.0",
+  "dependencies": {
+    "firebase": "^9.9.0"
+  }
+}

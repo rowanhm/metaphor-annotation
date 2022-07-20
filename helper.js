@@ -1,12 +1,24 @@
+import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-database.js'
+
 let all_senses = null
 let literal_mixed_senses = new Set();
 let metaphorical_senses = new Set();
 const label_options = ["Literal", "Mixed", "Metaphorical"]
 const cell_horizontal_spacing = '20px'
 
+// TODO update this to save_lemma
+function writeUserData(userId, name, email, imageUrl) {
+    const db = getDatabase();
+    set(ref(db, 'users/' + userId), {
+        username: name,
+        email: email,
+        profile_picture : imageUrl
+    });
+}
+
 async function load_json(file) {
     let response = await fetch(file);
-    if(response.status != 200) {
+    if (response.status != 200) {
         throw new Error("Server Error");
     }
     // read response stream as json
@@ -29,10 +41,7 @@ async function render() {
 
     all_senses = Array.from({length: sense_ids.length}, (_, i) => `${word}_${i + 1}`)
 
-    const element = document.getElementById("main");
-
     let form = document.createElement("form");
-    element.appendChild(form)
 
     let table = document.createElement("table");
     table.style.borderCollapse = 'collapse'
@@ -184,6 +193,12 @@ async function render() {
     submit.type = "submit"
     footer_cell.appendChild(submit)
 
+    // Add
+
+    const element = document.getElementById("main");
+    element.innerHTML = '' // Remove loading screen
+    element.appendChild(form)
+
 }
 
 function select_radio(sense, name) {
@@ -279,6 +294,7 @@ function literal(sense)
         // Remove the dropdown list and text box
         document.getElementById(`dropdown_${sense}`).innerHTML = '';
         document.getElementById(`similarity_${sense}`).innerHTML = ''
+        document.getElementById(`dropdown_followon_${sense}`).innerHTML = ''
     }
 }
 
@@ -302,3 +318,5 @@ function show_similarity(sense) {
         insert_point.innerHTML += '.'
     }
 }
+
+window.render = render;
