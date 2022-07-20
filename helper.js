@@ -25,14 +25,24 @@ async function load_json(file) {
     return await response.json();
 }
 
-async function render() {
+async function initialise() {
     // TODO update this to dynamically select which definition
-    let lemma = 'train.noun.1'
+    let queue_name = 'noun001'
 
     // Load info
     let concepts_to_definitions = await load_json("data/extracted/concepts_to_definitions.json");
     let lemmas_to_senses = await load_json("data/extracted/lemmas_to_senses.json");
     let senses_to_info = await load_json("data/extracted/senses_to_info.json");
+    let lemma_queues = await load_json("data/extracted/queues.json")
+
+    let queue = lemma_queues[queue_name]
+    let queue_index = 0
+
+    render(queue, 3, concepts_to_definitions, lemmas_to_senses, senses_to_info)
+}
+
+function render(queue, queue_index, concepts_to_definitions, lemmas_to_senses, senses_to_info) {
+    let lemma = queue[queue_index]
 
     const sense_ids = lemmas_to_senses[lemma]
 
@@ -183,22 +193,29 @@ async function render() {
 
     // Footer
     let footer = document.createElement("tr")
-    let footer_cell = document.createElement('td')
-    footer_cell.colSpan = '4'
-    footer_cell.style.paddingTop = `8px`
-    footer_cell.style.textAlign = 'right'
     table.appendChild(footer)
-    footer.appendChild(footer_cell)
+
+    let count_cell = document.createElement('td')
+    count_cell.colSpan = '2'
+    count_cell.style.paddingTop = `8px`
+    count_cell.style.textAlign = 'left'
+    count_cell.innerHTML = `<p style="color:grey">${queue_index+1}/${queue.length}</p>`
+    footer.appendChild(count_cell)
+
+    let submit_cell = document.createElement('td')
+    submit_cell.colSpan = '2'
+    submit_cell.style.paddingTop = `8px`
+    submit_cell.style.textAlign = 'right'
     let submit = document.createElement("input");
     submit.type = "submit"
-    footer_cell.appendChild(submit)
+    submit_cell.appendChild(submit)
+    footer.appendChild(submit_cell)
 
     // Add
 
     const element = document.getElementById("main");
     element.innerHTML = '' // Remove loading screen
     element.appendChild(form)
-
 }
 
 function select_radio(sense, name) {
