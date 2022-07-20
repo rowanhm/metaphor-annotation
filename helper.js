@@ -26,19 +26,19 @@ async function load_json(file) {
 }
 
 async function initialise() {
-    // TODO update this to dynamically select which definition
+    // TODO update this to take a queue as input
     let queue_name = 'noun001'
 
     // Load info
     let concepts_to_definitions = await load_json("data/extracted/concepts_to_definitions.json");
     let lemmas_to_senses = await load_json("data/extracted/lemmas_to_senses.json");
     let senses_to_info = await load_json("data/extracted/senses_to_info.json");
-    let lemma_queues = await load_json("data/extracted/queues.json")
-
-    let queue = lemma_queues[queue_name]
+    // let lemma_queues = await load_json("data/extracted/queues.json")
+    // let queue = lemma_queues[queue_name]
+    let queue = ['train.noun.1']
     let queue_index = 0
 
-    render(queue, 3, concepts_to_definitions, lemmas_to_senses, senses_to_info)
+    render(queue, queue_index, concepts_to_definitions, lemmas_to_senses, senses_to_info)
 }
 
 function render(queue, queue_index, concepts_to_definitions, lemmas_to_senses, senses_to_info) {
