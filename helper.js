@@ -1,7 +1,9 @@
-// import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-database.js'
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
+import { getDatabase, ref, set, child, get } from 'https://www.gstatic.com/firebasejs/9.9.0/firebase-database.js'
+
 function start() {
     let rend = new Renderer();
-    rend.initialise()
+    rend.initialise('noun010', 'test_user')
 }
 
 async function load_json(file) {
@@ -13,30 +15,40 @@ async function load_json(file) {
     return await response.json();
 }
 
+const firebaseConfig = {
+    databaseURL: "https://metaphor-annotation-default-rtdb.firebaseio.com",
+};
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+// Initialize Realtime Database and get a reference to the service
+const database = getDatabase(app);
+
+function save_lemma(user_id, queue_id, lemma_id, lemma_data) {
+    let promise = set(ref(database, `${user_id}/${queue_id}/${lemma_id}`), lemma_data);
+    return promise
+}
+
+function load_queue(user_id, queue_id) {
+    let promise = get(child(ref(database), `${user_id}/${queue_id}`))
+    return promise
+}
+
 class Renderer {
 
     constructor() {
 
     }
 
-    // TODO update this to save_lemma
-    /*function writeUserData(userId, name, email, imageUrl) {
-        const db = getDatabase();
-        set(ref(db, 'users/' + userId), {
-            username: name,
-            email: email,
-            profile_picture : imageUrl
-        });
-    }*/
+    async initialise(queue_name, user_id) {
 
-    async initialise() {
+        this.queue_name = queue_name
+        this.user_id = user_id
+
         const element = document.getElementById("main");
         element.innerHTML = 'Initialising...'
 
         this.label_options = ["Literal", "Mixed", "Metaphorical"]
         this.cell_horizontal_spacing = '20px'
-        // TODO update this to take a queue as input
-        this.queue_name = 'noun010'
 
         // Load info
         this.concepts_to_definitions = await load_json("data/extracted/concepts_to_definitions.json");
@@ -45,9 +57,39 @@ class Renderer {
         let lemma_queues = await load_json("data/extracted/queues.json")
 
         this.queue = lemma_queues[this.queue_name]
-        this.queue_index = 0
 
-        this.render()
+        this.update_queue_and_render()
+    }
+
+    update_queue_and_render() {
+        const element = document.getElementById("main");
+        element.innerHTML = 'Loading queue...'
+        load_queue(this.user_id, this.queue_name).then((snapshot) => {
+            let found = false
+            if (snapshot.exists()) {
+                // Find queue index
+                let user_data = snapshot.val()
+                for (let i = 0; i < this.queue.length; i++) {
+                    let lemma_i = this.queue[i]
+                    if (!(lemma_i in user_data)) {
+                        this.queue_index = i
+                        found = true
+                        break
+                    }
+                }
+
+            } else {
+                // Nothing saved
+                found = true
+                this.queue_index = 0
+            }
+
+            if (found) {
+                this.render()
+            } else {
+                // TODO handle end case
+            }
+        })
     }
 
     render() {
@@ -59,12 +101,12 @@ class Renderer {
 
         let that = this
 
-        let lemma = this.queue[this.queue_index]
+        this.lemma = this.queue[this.queue_index]
 
-        const sense_ids = this.lemmas_to_senses[lemma]
+        const sense_ids = this.lemmas_to_senses[this.lemma]
 
-        const word = lemma.split(".")[0]
-        const pos = lemma.split(".")[1]
+        const word = this.lemma.split(":")[0]
+        const pos = this.lemma.split(":")[1]
 
         this.all_senses = Array.from({length: sense_ids.length}, (_, i) => `${word}_${i + 1}`)
 
@@ -251,7 +293,7 @@ class Renderer {
         // Extract data
 
         let failures = []
-        let return_data = [];
+        let return_data = {};
 
         for (const sense_id of this.all_senses) {
             let sense_data = {}
@@ -286,20 +328,19 @@ class Renderer {
 
                 sense_data['derivation'] = derived_from
                 sense_data['similarity'] = similarity
-
-                return_data.push(sense_data)
             }
+            return_data[sense_id] = sense_data
         }
 
         // Either warn or submit
 
         if (failures.length == 0) {
-            // TODO Submit to server
+            // Submit to server
+            save_lemma(this.user_id, this.queue_name, this.lemma, return_data).then(() => {
+                // Next word
+                this.update_queue_and_render()
+            })
 
-            // Next word
-            // TODO handle end case
-            this.queue_index += 1
-            this.render()
 
         } else {
             // Warn
@@ -437,4 +478,4 @@ class Renderer {
     }
 }
 
-// window.render = render;
+window.start = start;

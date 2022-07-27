@@ -21,7 +21,7 @@ info(f'{len(lemmas_matching_criteria)} lemmas match criteria')
 info('Splitting by POS')
 pos_dict = defaultdict(set)
 for lemma_id in lemmas_matching_criteria:
-    pos = lemma_id.split('.')[1]
+    pos = lemma_id.split(':')[1]
     pos_dict[pos].add(lemma_id)
 
 info(f'POS breakdown: {[(pos, len(lemmas)) for pos, lemmas in pos_dict.items()]}')

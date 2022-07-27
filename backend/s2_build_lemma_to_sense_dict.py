@@ -11,6 +11,12 @@ lemmas_to_senses = defaultdict(set)
 for lemma_assignment in lemma_assignments:
     sense_id = lemma_assignment['wn_sense']
     lemma_id = lemma_assignment['lemma']
+
+    # Re-index
+    assert lemma_id.count('.') == 2
+    assert lemma_id.count(':') == 0
+    lemma_id = ':'.join(lemma_id.split('.'))
+
     lemmas_to_senses[lemma_id].add(sense_id)
 
 info('Filtering monosemes')
@@ -22,7 +28,7 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
 info('Ordering')
 lemmas_to_senses_ordered = {}
 for lemma_id, sense_ids in lemmas_to_senses_filtered.items():
-    word, pos, index = lemma_id.split('.')
+    word, pos, index = lemma_id.split(':')
     synsets = wn.synsets(word)
     # all_lemmas = []
     # for synset in synsets:
