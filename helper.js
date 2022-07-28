@@ -131,7 +131,7 @@ class Renderer {
         // Header
         let header_row = document.createElement("tr")
         header_row.style.borderTop = '2px solid black'
-        const headers = ['ID', 'Definition', 'Label', 'Extra&nbsp;Information']
+        const headers = ['ID', 'Definition', 'Image', 'Label', 'Extra&nbsp;Information']
         for (const header of headers) {
             let cell = document.createElement("td")
             cell.style.padding = `0 ${this.cell_horizontal_spacing}`
@@ -199,6 +199,13 @@ class Renderer {
             defn.style.padding = `0 ${this.cell_horizontal_spacing}`
             defn.appendChild(definition)
             row.appendChild(defn)
+
+            let img = document.createElement("td")
+            img.style.padding = `0 ${this.cell_horizontal_spacing}`
+            img.style.textAlign = 'center'
+            const image_file = `data/extracted/images/${sense_info['concept_id']}.jpg`
+            img.innerHTML = `<object data="${image_file}" type="image/jpeg">N/A</object>`
+            row.appendChild(img)
 
             let metaphor_select = document.createElement("td")
             defn.style.padding = `0 ${this.cell_horizontal_spacing}`

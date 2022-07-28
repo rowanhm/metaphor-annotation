@@ -1,4 +1,6 @@
 # Directories
+imagenet_dir = '/anfs/bigdisc/rh635/imagenet/winter21_whole/'
+
 root = './'
 data_dir = root + 'data/'
 source_dir = root + 'src/'
@@ -20,6 +22,8 @@ concepts_to_definitions_dir = extracted_data_dir + 'concepts_to_definitions/'
 senses_to_info_dir = extracted_data_dir + 'senses_to_info/'
 
 queues_js_file = extracted_data_dir + 'queues.json'
+
+image_dir = extracted_data_dir + 'images/'
 
 # Parameters
 QUEUE_LENGTH = 100
