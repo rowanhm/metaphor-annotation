@@ -3,7 +3,7 @@ import { getDatabase, ref, set, child, get } from 'https://www.gstatic.com/fireb
 
 function start() {
     let rend = new Renderer();
-    rend.initialise('noun010', 'test_user')
+    rend.initialise('noun001', 'test_user')
 }
 
 async function load_json(file) {
@@ -204,13 +204,14 @@ class Renderer {
             img.style.padding = `0 ${this.cell_horizontal_spacing}`
             img.style.textAlign = 'center'
             const image_file = `data/extracted/images/${sense_info['concept_id']}.jpg`
-            img.innerHTML = `<object data="${image_file}" type="image/jpeg">N/A</object>`
+            img.innerHTML = `<object data="${image_file}" type="image/jpeg"></object>`
             row.appendChild(img)
 
             let metaphor_select = document.createElement("td")
             defn.style.padding = `0 ${this.cell_horizontal_spacing}`
             for (const option of this.label_options) {
                 let no_break = document.createElement('nobr')
+                let label = document.createElement("label");
 
                 const code = `${option.toLowerCase()}_${sense}`
                 let input = document.createElement("input");
@@ -218,14 +219,13 @@ class Renderer {
                 input.id = code
                 input.name = `metaphoricity_${sense}`
                 input.value = option
-                input.onclick = function () {
+                label.onclick = function () {
                     that.select_radio(sense, option.toLowerCase())
                 }
-                no_break.appendChild(input)
+                label.appendChild(input)
 
-                let label = document.createElement("label");
                 label.for = code
-                label.innerHTML = option
+                label.innerHTML += option
                 label.appendChild(document.createElement("br"))
                 no_break.appendChild(label)
 

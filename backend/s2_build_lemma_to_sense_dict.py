@@ -1,23 +1,26 @@
 from collections import defaultdict
 from nltk.corpus import wordnet as wn
 
-from backend.common.common import open_dict_csv, info, save_pickle
-from backend.common.global_variables import raw_data_dir, lemmas_to_senses_py_file
+from backend.common.common import open_dict_csv, info, save_pickle, safe_lemma_from_key
+from backend.common.global_variables import raw_data_dir, lemmas_to_senses_py_file, related_lemmas_file, pos_map
 
-lemma_assignments = open_dict_csv(raw_data_dir + 'within_pos_clusters.csv')
+lemma_assignments = open_dict_csv(raw_data_dir + 'between_pos_clusters.csv')
 
 info('Extracting')
+related_lemmas = defaultdict(set)  # word/index -> pos
 lemmas_to_senses = defaultdict(set)
 for lemma_assignment in lemma_assignments:
     sense_id = lemma_assignment['wn_sense']
     lemma_id = lemma_assignment['lemma']
 
-    # Re-index
-    assert lemma_id.count('.') == 2
+    # Recover POS and re-index
+    assert lemma_id.count('.') == 1
     assert lemma_id.count(':') == 0
-    lemma_id = ':'.join(lemma_id.split('.'))
+    word, index = lemma_id.split('.')
+    pos = pos_map[safe_lemma_from_key(word, sense_id).synset().pos()]
 
-    lemmas_to_senses[lemma_id].add(sense_id)
+    lemmas_to_senses[f'{word}:{pos}:{index}'].add(sense_id)
+    related_lemmas[(word, index)].add(pos)
 
 info('Filtering monosemes')
 lemmas_to_senses_filtered = {}
@@ -44,3 +47,4 @@ for lemma_id, sense_ids in lemmas_to_senses_filtered.items():
 
 info('Saving')
 save_pickle(lemmas_to_senses_py_file, lemmas_to_senses_ordered)
+save_pickle(related_lemmas_file, related_lemmas)

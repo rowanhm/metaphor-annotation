@@ -4,6 +4,9 @@ import pickle
 import logging
 import bz2
 
+from nltk.corpus.reader.wordnet import WordNetError
+from nltk.corpus import wordnet as wn
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
@@ -117,6 +120,7 @@ def save_list_csv(file, all_lines):
         for row in all_lines:
             csv_writer.writerow(row)
 
+
 def save_csv(file, all_lines):
     ftype = file[-4:]
     delimiter = ''
@@ -168,6 +172,23 @@ def save_text(file, lines):
     with open(file, 'w') as fp:
         fp.writelines(lines)
 
+
+def safe_lemma_from_key(word, sense_id):
+    try:
+        sense_obj = wn.lemma_from_key(sense_id)
+    except WordNetError:
+        sense_obj = None
+        synsets = wn.synsets(word)
+        for synset in synsets:
+            synset_senses = synset.lemmas()
+            for sense in synset_senses:
+                if sense.key() == sense_id:
+                    sense_obj = sense
+                    break
+            if sense_obj is not None:
+                break
+    assert sense_obj is not None
+    return sense_obj
 
 def read_text(file):
     with open(file, 'r') as fp:

@@ -1,22 +1,67 @@
 # TODO add known ones, to evaluate each annotator
 import json
 from collections import defaultdict
+from nltk.corpus import wordnet as wn
+from nltk.corpus.reader.wordnet import WordNetError
 
-from backend.common.common import open_pickle, info
+from backend.common.common import open_pickle, info, read_text, safe_lemma_from_key
 from backend.common.global_variables import lemmas_to_senses_py_file, MIN_SENSES, MAX_SENSES, QUEUE_LENGTH, \
-    queues_js_file
+    queues_js_file, whitelist_vocab_file, related_lemmas_file
 
 info('Loading')
+WORD_LIST = set(read_text(whitelist_vocab_file))
+info(f"{len(WORD_LIST)} whitelisted words")
 lemma_to_senses = open_pickle(lemmas_to_senses_py_file)
 info(f'{len(lemma_to_senses)} lemmas total')
+related_lemmas = open_pickle(related_lemmas_file)
+
+senses_to_lemmas = {}
+for lemma, senses in lemma_to_senses.items():
+    for sense in senses:
+        assert sense not in senses_to_lemmas.keys()
+        senses_to_lemmas[sense] = lemma
 
 info('Filtering')
 lemmas_matching_criteria = set()
+skipped = {}
 for lemma_id, senses in lemma_to_senses.items():
-    if MIN_SENSES <= len(senses) <= MAX_SENSES:
-        lemmas_matching_criteria.add(lemma_id)
+    word, pos, ind = lemma_id.split(':')
+    if (word in WORD_LIST) and (MIN_SENSES <= len(senses) <= MAX_SENSES):
 
-info(f'{len(lemmas_matching_criteria)} lemmas match criteria')
+        # Check related forms
+        related_forms = set()
+
+        # Add ones with same form
+        for related_pos in related_lemmas[(word, ind)]:
+            if related_pos != pos:
+                related_forms.add(f'{word}:{related_pos}:{ind}')
+
+        # Check derivationally related
+        for sense_id in senses:
+
+            # Get sense object
+            sense_obj = safe_lemma_from_key(word, sense_id)
+
+            related_form_objs = sense_obj.derivationally_related_forms()
+            for related_form_obj in related_form_objs:
+                # Get the lemma it is a part of
+                related_form_key = related_form_obj.key()
+                if related_form_key in senses_to_lemmas.keys():  # If it isn't it has only one sense
+                    related_forms.add(senses_to_lemmas[related_form_key])
+
+        skip = False
+        for related_lemma in related_forms:
+            # Skip this lemma if a related lemma has more senses
+            if len(lemma_to_senses[related_lemma]) > len(senses):
+                skip = True
+                skipped[lemma_id] = related_lemma
+                break
+
+        if not skip:
+            lemmas_matching_criteria.add(lemma_id)
+
+info(f'{len(lemmas_matching_criteria)} lemmas match criteria ({len(skipped)} skipped)')
+info(skipped)
 
 info('Splitting by POS')
 pos_dict = defaultdict(set)
@@ -47,5 +92,3 @@ for pos, pos_lemmas in pos_dict.items():
 info('Saving')
 with open(queues_js_file, "w") as fp:
     json.dump(queue_dict, fp)
-
-

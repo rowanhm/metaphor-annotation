@@ -12,6 +12,8 @@ lemmas_to_senses_py_file = raw_data_dir + 'lemmas_to_senses.pkl'
 concepts_to_definitions_py_file = raw_data_dir + 'concepts_to_definitions.pkl'
 senses_to_info_py_file = raw_data_dir + 'senses_to_info.pkl'
 example_sentences_file_princeton = raw_data_dir + 'example_sentences_princeton.pkl'  # list of annotated_sentence
+whitelist_vocab_file = raw_data_dir + 'google-10000-english-usa.txt'
+related_lemmas_file = raw_data_dir + 'related_lemmas.pkl'
 
 lemmas_to_senses_js_file = extracted_data_dir + 'lemmas_to_senses.json'
 concepts_to_definitions_js_file = extracted_data_dir + 'concepts_to_definitions.json'
@@ -29,3 +31,17 @@ image_dir = extracted_data_dir + 'images/'
 QUEUE_LENGTH = 100
 MIN_SENSES = 2
 MAX_SENSES = 10
+
+pos_map = {
+    'v': 'verb',
+    'n': 'noun',
+    'r': 'adv',
+    'a': 'adj',
+    's': 'adj'
+}
+pos_map_reverse = {
+    'verb': {'v'},
+    'noun': {'n'},
+    'adv': {'r'},
+    'adj': {'a', 's'}
+}
