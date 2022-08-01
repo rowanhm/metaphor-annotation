@@ -23,45 +23,61 @@ for lemma, senses in lemma_to_senses.items():
 
 info('Filtering')
 lemmas_matching_criteria = set()
-skipped = {}
+
+excluded_word_list = 0
+excluded_sense_count = 0
+excluded_word_length = 0
+excluded_derivation = 0
+
 for lemma_id, senses in lemma_to_senses.items():
     word, pos, ind = lemma_id.split(':')
-    if (word in WORD_LIST) and (MIN_SENSES <= len(senses) <= MAX_SENSES):
 
-        # Check related forms
-        related_forms = set()
+    if word not in WORD_LIST:
+        excluded_word_list += 1
+        continue
 
-        # Add ones with same form
-        for related_pos in related_lemmas[(word, ind)]:
-            if related_pos != pos:
-                related_forms.add(f'{word}:{related_pos}:{ind}')
+    if not (MIN_SENSES <= len(senses) <= MAX_SENSES):
+        excluded_sense_count += 1
+        continue
 
-        # Check derivationally related
-        for sense_id in senses:
+    if len(word) <= 1:
+        excluded_word_length += 1
+        continue
 
-            # Get sense object
-            sense_obj = safe_lemma_from_key(word, sense_id)
+    # Check related forms
+    related_forms = set()
 
-            related_form_objs = sense_obj.derivationally_related_forms()
-            for related_form_obj in related_form_objs:
-                # Get the lemma it is a part of
-                related_form_key = related_form_obj.key()
-                if related_form_key in senses_to_lemmas.keys():  # If it isn't it has only one sense
-                    related_forms.add(senses_to_lemmas[related_form_key])
+    # Add ones with same form
+    for related_pos in related_lemmas[(word, ind)]:
+        if related_pos != pos:
+            related_forms.add(f'{word}:{related_pos}:{ind}')
 
-        skip = False
-        for related_lemma in related_forms:
-            # Skip this lemma if a related lemma has more senses
-            if len(lemma_to_senses[related_lemma]) > len(senses):
-                skip = True
-                skipped[lemma_id] = related_lemma
-                break
+    # Check derivationally related
+    for sense_id in senses:
 
-        if not skip:
-            lemmas_matching_criteria.add(lemma_id)
+        # Get sense object
+        sense_obj = safe_lemma_from_key(word, sense_id)
 
-info(f'{len(lemmas_matching_criteria)} lemmas match criteria ({len(skipped)} skipped)')
-info(skipped)
+        related_form_objs = sense_obj.derivationally_related_forms()
+        for related_form_obj in related_form_objs:
+            # Get the lemma it is a part of
+            related_form_key = related_form_obj.key()
+            if related_form_key in senses_to_lemmas.keys():  # If it isn't it has only one sense
+                related_forms.add(senses_to_lemmas[related_form_key])
+
+    skip = False
+    for related_lemma in related_forms:
+        # Skip this lemma if a related lemma has more senses
+        if len(lemma_to_senses[related_lemma]) > len(senses):
+            skip = True
+            break
+
+    if not skip:
+        lemmas_matching_criteria.add(lemma_id)
+    else:
+        excluded_derivation += 1
+
+info(f'{len(lemmas_matching_criteria)} lemmas match criteria (skippages: {excluded_word_list} as missing from whitelist; {excluded_sense_count} for wrong number of senses; {excluded_word_length} for too short form; {excluded_derivation} because of derivation)')
 
 info('Splitting by POS')
 pos_dict = defaultdict(set)

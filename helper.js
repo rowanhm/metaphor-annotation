@@ -52,6 +52,7 @@ class Renderer {
 
         // Load info
         this.concepts_to_definitions = await load_json("data/extracted/concepts_to_definitions.json");
+        this.concepts_to_img_flags = await load_json("data/extracted/concepts_to_images.json");
         this.lemmas_to_senses = await load_json("data/extracted/lemmas_to_senses.json");
         this.senses_to_info = await load_json("data/extracted/senses_to_info.json");
         let lemma_queues = await load_json("data/extracted/queues.json")
@@ -201,10 +202,13 @@ class Renderer {
             row.appendChild(defn)
 
             let img = document.createElement("td")
-            img.style.padding = `0 ${this.cell_horizontal_spacing}`
-            img.style.textAlign = 'center'
-            const image_file = `data/extracted/images/${sense_info['concept_id']}.jpg`
-            img.innerHTML = `<object data="${image_file}" type="image/jpeg"></object>`
+
+            if (this.concepts_to_img_flags[sense_info['concept_id']]) {
+                img.style.padding = `0 ${this.cell_horizontal_spacing}`
+                img.style.textAlign = 'center'
+                const image_file = `data/extracted/images/${sense_info['concept_id']}.jpg`
+                img.innerHTML = `<object data="${image_file}" type="image/jpeg"></object>`
+            }
             row.appendChild(img)
 
             let metaphor_select = document.createElement("td")

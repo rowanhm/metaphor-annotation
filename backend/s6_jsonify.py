@@ -1,11 +1,9 @@
-import copy
 import json
-import os
 
 from backend.common.common import info, open_pickle
 from backend.common.global_variables import lemmas_to_senses_py_file, lemmas_to_senses_js_file, \
     concepts_to_definitions_py_file, concepts_to_definitions_js_file, senses_to_info_py_file, senses_to_info_js_file, \
-    lemmas_to_senses_dir, concepts_to_definitions_dir, senses_to_info_dir, extracted_data_dir
+    lemmas_to_senses_dir, concepts_to_definitions_dir, senses_to_info_dir, extracted_data_dir, concepts_to_img_js_file, concepts_to_img_py_file
 
 
 # def reindex(keys, category):
@@ -37,6 +35,7 @@ info('Loading')
 lemma_to_senses = open_pickle(lemmas_to_senses_py_file)
 concept_to_def = open_pickle(concepts_to_definitions_py_file)
 sense_to_info = open_pickle(senses_to_info_py_file)
+concept_to_img = open_pickle(concepts_to_img_py_file)
 
 # info('Renaming to remove slashes and dots')
 # sense_id_map = reindex(sense_to_info.keys(), 'S')
@@ -128,11 +127,13 @@ with open(lemmas_to_senses_js_file, "w") as fp:
     json.dump(lemma_to_senses, fp)
 # save_json_per_item(lemma_to_senses, lemmas_to_senses_dir, depth=1)
 
-info('Processing concept to definition')
+info('Processing concept to definition/image')
 concept_to_def_flattened = {concept_id: defn.to_dict() for concept_id, defn in concept_to_def.items()}
 with open(concepts_to_definitions_js_file, "w") as fp:
     json.dump(concept_to_def_flattened, fp)
 # save_json_per_item(concept_to_def_flattened, concepts_to_definitions_dir, depth=2)
+with open(concepts_to_img_js_file, "w") as fp:
+    json.dump(concept_to_img, fp)
 
 info('Processing sense to info')
 sense_to_info_flattened = {}
