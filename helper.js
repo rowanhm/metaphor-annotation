@@ -147,9 +147,14 @@ class Renderer {
             if (found) {
                 this.render()
             } else {
-                // TODO handle end case
+                this.final_screen()
             }
         })
+    }
+
+    final_screen() {
+        const element = document.getElementById("main");
+        element.innerHTML = 'Thank you for participating.'
     }
 
     render() {
