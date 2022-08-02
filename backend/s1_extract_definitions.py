@@ -305,8 +305,7 @@ def main():
                     if raw_string[domain_end:domain_end+1] == ')':
                         domain_sentence.append((')', None, domain_end, domain_end+1))
 
-            # Next, merge domain
-            if 'Domain' in all_codes:
+                # Next, merge domain
                 if all_codes[0] == 'Domain':
                     assert all_codes[1] == 'Definition'
                     all_codes = all_codes[1:]
@@ -314,7 +313,7 @@ def main():
                     assert all_codes[1] == 'Domain'
                     assert all_codes[0] == 'Definition'
                     all_codes = all_codes[:1] + all_codes[2:]
-                all_sentences[1] = all_sentences[0] + all_sentences[1]
+                all_sentences[1] = domain_sentence + all_sentences[1]
                 all_sentences = all_sentences[1:]
             assert 'Domain' not in all_codes
 

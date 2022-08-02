@@ -216,7 +216,7 @@ class Renderer {
             // Add synonyms
             const synonyms = sense_info['synonyms']
             if (synonyms.length > 0) {
-                definition.innerHTML += '('
+                definition.innerHTML += '['
                 for (let i = 0; i < synonyms.length; i++) {
                     const synonym = synonyms[i]
                     const synonym_string = synonym['string']
@@ -227,7 +227,7 @@ class Renderer {
                         definition.innerHTML += ', '
                     }
                 }
-                definition.innerHTML += ') '
+                definition.innerHTML += '] '
             }
 
             // Add definition
