@@ -1,8 +1,7 @@
 # TODO add known ones, to evaluate each annotator
+# TODO control for number of senses
 import json
 from collections import defaultdict
-from nltk.corpus import wordnet as wn
-from nltk.corpus.reader.wordnet import WordNetError
 
 from backend.common.common import open_pickle, info, read_text, safe_lemma_from_key
 from backend.common.global_variables import lemmas_to_senses_py_file, MIN_SENSES, MAX_SENSES, QUEUE_LENGTH, \

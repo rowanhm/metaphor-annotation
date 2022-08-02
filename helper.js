@@ -3,7 +3,7 @@ import { getDatabase, ref, set, child, get } from 'https://www.gstatic.com/fireb
 
 function start() {
     let rend = new Renderer();
-    rend.initialise('noun001', 'test_user')
+    rend.initialise()
 }
 
 async function load_json(file) {
@@ -39,10 +39,7 @@ class Renderer {
 
     }
 
-    async initialise(queue_name, user_id) {
-
-        this.queue_name = queue_name
-        this.user_id = user_id
+    async initialise() {
 
         const element = document.getElementById("main");
         element.innerHTML = 'Initialising...'
@@ -55,11 +52,73 @@ class Renderer {
         this.concepts_to_img_flags = await load_json("data/extracted/concepts_to_images.json");
         this.lemmas_to_senses = await load_json("data/extracted/lemmas_to_senses.json");
         this.senses_to_info = await load_json("data/extracted/senses_to_info.json");
-        let lemma_queues = await load_json("data/extracted/queues.json")
+        this.lemma_queues = await load_json("data/extracted/queues.json")
 
-        this.queue = lemma_queues[this.queue_name]
+        this.initialise_credentials()
+    }
 
+    initialise_credentials(){
+
+        const element = document.getElementById("main");
+
+        let that = this
+
+        let form = document.createElement("form");
+        form.id = "form"
+
+        // User ID
+        form.innerHTML += 'User ID: '
+        let name = document.createElement('input')
+        name.id = 'user_id'
+        name.name = 'user_id'
+        name.type = 'text'
+        form.appendChild(name)
+
+        // Queue
+        form.innerHTML += '<br>Queue ID: '
+        let queue = document.createElement('input')
+        queue.id = 'queue_id'
+        queue.name = 'queue_id'
+        queue.type = 'text'
+        form.appendChild(queue)
+        form.innerHTML += '<br>'
+
+        // Submit
+        let submit = document.createElement("input");
+        submit.type = "submit"
+        form.appendChild(submit)
+        form.innerHTML += '<br>'
+
+        // Warning cell
+        let warnings = document.createElement('p')
+        warnings.style.color = 'red'
+        warnings.id = 'warnings'
+        form.appendChild(warnings)
+        form.onsubmit = function() { return that.submit_credentials() }
+
+        element.innerHTML = ''
+        element.appendChild(form)
+    }
+
+    submit_credentials() {
+        // Sanity check
+        const warnings = document.getElementById(`warnings`)
+        this.user_id = document.getElementById(`user_id`).value
+        this.queue_name = document.getElementById(`queue_id`).value
+
+        if (this.user_id == "") {
+            warnings.innerHTML = 'User ID cannot be empty.'
+            return false
+        }
+
+        if (!(this.queue_name in this.lemma_queues)) {
+            warnings.innerHTML = 'Invalid queue ID.'
+            return false
+        }
+
+        this.queue = this.lemma_queues[this.queue_name]
         this.update_queue_and_render()
+        return false
     }
 
     update_queue_and_render() {
@@ -95,7 +154,7 @@ class Renderer {
 
     render() {
         const element = document.getElementById("main");
-        element.innerHTML = 'Rendering...'
+        // element.innerHTML = 'Rendering...'
 
         this.literal_mixed_senses = new Set();
         this.metaphorical_senses = new Set();
@@ -293,14 +352,14 @@ class Renderer {
         table.appendChild(footer_2)
 
         // Submit logic
-        form.onsubmit = function() { return that.submit() }
+        form.onsubmit = function() { return that.submit_annotation() }
 
         // Add
         element.innerHTML = '' // Remove loading screen
         element.appendChild(form)
     }
 
-    submit() {
+    submit_annotation() {
         // Extract data
 
         let failures = []
@@ -384,8 +443,7 @@ class Renderer {
         }
     }
 
-    metaphor(sense)
-    {
+    metaphor(sense) {
         if (!this.metaphorical_senses.has(sense)) {
 
             // Remove it from other dropdown lists
@@ -443,8 +501,7 @@ class Renderer {
         }
     }
 
-    literal(sense)
-    {
+    literal(sense) {
         if (!this.literal_mixed_senses.has(sense)) {
 
             // Reassign
