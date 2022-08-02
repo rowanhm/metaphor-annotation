@@ -479,15 +479,15 @@ class Renderer {
     select_radio(sense, name) {
         let row = document.getElementById(sense)
         if (name == 'metaphorical') {
-            row.style.backgroundColor = 'purple'
-            row.style.color = 'white'
+            row.style.backgroundColor = '#C0DDFA' // met
+            // row.style.color = 'white'
             this.metaphor(sense)
         } else if (name == 'literal') {
-            row.style.backgroundColor = 'yellow'
-            row.style.color = 'black'
+            row.style.backgroundColor = '#FAF4DD' // lit
+            // row.style.color = 'black'
             this.literal(sense)
         } else {
-            row.style.backgroundColor = 'orange'
+            row.style.backgroundColor = '#FFDBC2' // mixed
             row.style.color = 'black'
             this.literal(sense)
         }
