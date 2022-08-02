@@ -33,6 +33,7 @@ function load_queue(user_id, queue_id) {
     return promise
 }
 
+
 class Renderer {
 
     constructor() {
@@ -210,43 +211,7 @@ class Renderer {
         let last_row = null
         for (const sense_id of sense_ids) {
 
-            const sense_info = this.senses_to_info[sense_id]
-            let definition = document.createElement('p')
-
-            // Add synonyms
-            const synonyms = sense_info['synonyms']
-            if (synonyms.length > 0) {
-                definition.innerHTML += '['
-                for (let i = 0; i < synonyms.length; i++) {
-                    const synonym = synonyms[i]
-                    const synonym_string = synonym['string']
-                    let italic = document.createElement('i')
-                    italic.innerHTML += synonym_string.replaceAll('_', ' ')
-                    definition.appendChild(italic)
-                    if (i < synonyms.length - 1) {
-                        definition.innerHTML += ', '
-                    }
-                }
-                definition.innerHTML += '] '
-            }
-
-            // Add definition
-            const definition_string = this.concepts_to_definitions[sense_info['concept_id']]
-            definition.innerHTML += definition_string['string']
-
-            // Add examples
-            const examples = sense_info['examples']
-            if (examples.length > 0) {
-                definition.innerHTML += ', e.g. '
-                for (let i = 0; i < examples.length; i++) {
-                    const example = examples[i]
-                    const example_string = example['string']
-                    definition.innerHTML += example_string
-                    if (i < examples.length - 1) {
-                        definition.innerHTML += ', '
-                    }
-                }
-            }
+            let definition = this.create_definition(sense_id)
 
             const sense = this.all_senses[index - 1]
 
@@ -266,11 +231,12 @@ class Renderer {
             row.appendChild(defn)
 
             let img = document.createElement("td")
+            const concept_id = this.senses_to_info[sense_id]['concept_id']
 
-            if (this.concepts_to_img_flags[sense_info['concept_id']]) {
+            if (this.concepts_to_img_flags[concept_id]) {
                 img.style.padding = `0 ${this.cell_horizontal_spacing}`
                 img.style.textAlign = 'center'
-                const image_file = `data/extracted/images/${sense_info['concept_id']}.jpg`
+                const image_file = `data/extracted/images/${concept_id}.jpg`
                 img.innerHTML = `<object data="${image_file}" type="image/jpeg"></object>`
             }
             row.appendChild(img)
@@ -362,6 +328,85 @@ class Renderer {
         // Add
         element.innerHTML = '' // Remove loading screen
         element.appendChild(form)
+    }
+
+    create_definition(sense_id, deep_linked=true) {
+        const sense_info = this.senses_to_info[sense_id]
+
+        let definition = document.createElement('p')
+
+        // Add synonyms
+        const synonyms = sense_info['synonyms']
+        if (synonyms.length > 0) {
+            definition.innerHTML += '['
+            for (let i = 0; i < synonyms.length; i++) {
+                const synonym = synonyms[i]
+                const synonym_string = synonym['string']
+                let italic = document.createElement('i')
+                italic.innerHTML += synonym_string.replaceAll('_', ' ')
+                definition.appendChild(italic)
+                if (i < synonyms.length - 1) {
+                    definition.innerHTML += ', '
+                }
+            }
+            definition.innerHTML += '] '
+        }
+
+        // Add definition
+        const definition_string = this.concepts_to_definitions[sense_info['concept_id']]
+        if (deep_linked) {
+            definition.appendChild(this.hyperlinked_string(definition_string))
+        } else {
+            definition.innerHTML += definition_string['string']
+        }
+
+        // Add examples
+        const examples = sense_info['examples']
+        if (examples.length > 0) {
+            definition.innerHTML += ', e.g. '
+            for (let i = 0; i < examples.length; i++) {
+                const example = examples[i]
+                const example_string = example['string']
+                definition.innerHTML += example_string
+                if (i < examples.length - 1) {
+                    definition.innerHTML += ', '
+                }
+            }
+        }
+
+        return definition
+    }
+
+    hyperlinked_string(definition_object) {
+        const string = definition_object['string']
+        const annotations = definition_object['annotations']
+        let definition = document.createElement("span");
+
+        let old_end_index = 0
+        for (const annotation of annotations) {
+            const start_index = annotation[0]
+            const end_index = annotation[1]
+            const sense_id = annotation[2]
+
+            // Add text between this annotation and the last
+            definition.innerHTML += string.slice(old_end_index, start_index)
+
+            // Add hyperlinked text
+            let linked_text = document.createElement("div");
+            linked_text.innerHTML = string.slice(start_index, end_index)
+            linked_text.classList.add('tooltip')
+
+            // add hover
+            let hover_over = this.create_definition(sense_id, false)
+            hover_over.classList.add('tooltiptext')
+            linked_text.appendChild(hover_over)
+
+            definition.appendChild(linked_text)
+            
+            old_end_index = end_index
+        }
+        definition.innerHTML += string.slice(old_end_index, string.length)
+        return definition
     }
 
     submit_annotation() {
