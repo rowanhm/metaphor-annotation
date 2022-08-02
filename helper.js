@@ -174,7 +174,7 @@ class Renderer {
         const word = this.lemma.split(":")[0]
         const pos = this.lemma.split(":")[1]
 
-        this.all_senses = Array.from({length: sense_ids.length}, (_, i) => `${word}_${i + 1}`)
+        this.all_senses = Array.from({length: sense_ids.length}, (_, i) => `${word}(${i + 1})`)
 
         let form = document.createElement("form");
         form.id = "form"
@@ -392,7 +392,7 @@ class Renderer {
             definition.innerHTML += string.slice(old_end_index, start_index)
 
             // Add hyperlinked text
-            let linked_text = document.createElement("div");
+            let linked_text = document.createElement("span");
             linked_text.innerHTML = string.slice(start_index, end_index)
             linked_text.classList.add('tooltip')
 
