@@ -297,7 +297,7 @@ class Renderer {
         table.appendChild(footer)
 
         let count_cell = document.createElement('td')
-        count_cell.colSpan = '2'
+        count_cell.colSpan = '3'
         count_cell.style.paddingTop = `8px`
         count_cell.style.textAlign = 'left'
         count_cell.innerHTML = `<p style="color:grey">${this.queue_index+1}/${this.queue.length}</p>`
@@ -309,13 +309,20 @@ class Renderer {
         submit_cell.style.textAlign = 'right'
         let submit = document.createElement("input");
         submit.type = "submit"
+        let guidelines = document.createElement("button")
+        guidelines.innerHTML = 'See Guidelines'
+        guidelines.onclick = () => {
+            window.open('documentation/Metaphor_Annotation_Guidelines.pdf');
+        };
+        submit_cell.appendChild(guidelines)
+        submit_cell.innerHTML += ' '
         submit_cell.appendChild(submit)
         footer.appendChild(submit_cell)
 
         // Warning cell
         let footer_2 = document.createElement("tr")
         let warning_cell = document.createElement('td')
-        warning_cell.colSpan = '4'
+        warning_cell.colSpan = '5'
         warning_cell.style.paddingTop = `8px`
         warning_cell.id = 'warnings'
 
