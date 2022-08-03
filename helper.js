@@ -49,11 +49,13 @@ class Renderer {
         this.cell_horizontal_spacing = '20px'
 
         // Load info
+        console.log('Loading data')
         this.concepts_to_definitions = await load_json("data/extracted/concepts_to_definitions.json");
         this.concepts_to_img_flags = await load_json("data/extracted/concepts_to_images.json");
         this.lemmas_to_senses = await load_json("data/extracted/lemmas_to_senses.json");
         this.senses_to_info = await load_json("data/extracted/senses_to_info.json");
         this.lemma_queues = await load_json("data/extracted/queues.json")
+        console.log('Data loaded')
 
         this.initialise_credentials()
     }
