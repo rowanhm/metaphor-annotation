@@ -312,12 +312,11 @@ class Renderer {
         let submit = document.createElement("input");
         submit.type = "submit"
         let guidelines = document.createElement("button")
+        guidelines.type = 'button'
+        guidelines.onclick = function () { that.open_guidelines() }
         guidelines.innerHTML = 'See Guidelines'
-        guidelines.onclick = () => {
-            window.open('documentation/Metaphor_Annotation_Guidelines.pdf');
-        };
+
         submit_cell.appendChild(guidelines)
-        submit_cell.innerHTML += ' '
         submit_cell.appendChild(submit)
         footer.appendChild(submit_cell)
 
@@ -337,6 +336,12 @@ class Renderer {
         // Add
         element.innerHTML = '' // Remove loading screen
         element.appendChild(form)
+    }
+
+    open_guidelines() {
+        console.log('Opening guidelines')
+        window.open('documentation/Metaphor_Annotation_Guidelines.pdf')
+        return false
     }
 
     create_definition(sense_id, deep_linked=true) {
@@ -439,16 +444,20 @@ class Renderer {
                 // No radio button selected
                 failures.push(`<b>${sense_id}</b> has no label assigned.`)
 
-            } else if (label == "metaphorical") {
+            } else if (label === "metaphorical") {
                 let derived_from = ""
                 let similarity = ""
+                let diff1 = ""
+                let diff2 = ""
                 let dropdown = document.getElementById("select_"+sense_id)
                 if (dropdown.selectedIndex > 0) {
                     derived_from = dropdown.value
                     similarity = document.getElementById(`similarity_desc_${sense_id}`).value
-                    if (similarity == "") {
+                    diff1 = document.getElementById(`diff1_desc_${sense_id}`).value
+                    diff2 = document.getElementById(`diff2_desc_${sense_id}`).value
+                    if ((similarity === "") || (diff1 === "") || (diff2 === "")) {
                         // No description
-                        failures.push(`<b>${sense_id}</b> is metaphorically related to <b>${derived_from}</b>, but no description of the similarity is provided.`)
+                        failures.push(`<b>${sense_id}</b> is metaphorically related to <b>${derived_from}</b>, but a complete description of the similarity/difference is not provided.`)
                     }
                 } else {
                     // No metaphorical derivation
@@ -456,14 +465,16 @@ class Renderer {
                 }
 
                 sense_data['derivation'] = derived_from
-                sense_data['similarity'] = similarity
+                sense_data['feature_same'] = similarity
+                sense_data['feature_other'] = diff1
+                sense_data['feature_this'] = diff2
             }
             return_data[sense_id] = sense_data
         }
 
         // Either warn or submit
 
-        if (failures.length == 0) {
+        if (failures.length === 0) {
             // Submit to server
             save_lemma(this.user_id, this.queue_name, this.lemma, return_data).then(() => {
                 // Next word
@@ -487,11 +498,11 @@ class Renderer {
 
     select_radio(sense, name) {
         let row = document.getElementById(sense)
-        if (name == 'metaphorical') {
+        if (name === 'metaphorical') {
             row.style.backgroundColor = '#C0DDFA' // met
             // row.style.color = 'white'
             this.metaphor(sense)
-        } else if (name == 'literal') {
+        } else if (name === 'literal') {
             row.style.backgroundColor = '#FAF4DD' // lit
             // row.style.color = 'black'
             this.literal(sense)
@@ -503,6 +514,7 @@ class Renderer {
     }
 
     metaphor(sense) {
+        console.log(`metaphor: ${sense}`)
         if (!this.metaphorical_senses.has(sense)) {
 
             // Remove it from other dropdown lists
@@ -555,12 +567,15 @@ class Renderer {
 
             // Add it to the correct point
             let insert_point = document.getElementById(`dropdown_${sense}`);
-            insert_point.innerHTML = ' It is similar to '
+            insert_point.innerHTML = 'Related to '
             insert_point.appendChild(select_list);
+            document.getElementById(`dropdown_followon_${sense}`).innerHTML = '.'
+
         }
     }
 
     literal(sense) {
+        console.log(`literal: ${sense}`)
         if (!this.literal_mixed_senses.has(sense)) {
 
             // Reassign
@@ -582,7 +597,7 @@ class Renderer {
     }
 
     show_similarity(sense) {
-
+        console.log(`Show similarity: ${sense}`)
         var select = document.getElementById("select_"+sense);
         if(select.selectedIndex <=0) {
             // Nothing selected
@@ -591,16 +606,34 @@ class Renderer {
 
         } else {
             // Add text box
+            let similar_to = document.getElementById("select_"+sense).value
+
             let similarity = document.createElement('input')
             similarity.id = `similarity_desc_${sense}`
             similarity.name = `similarity_desc_${sense}`
             similarity.type = 'text'
+
+            let diff1 = document.createElement('input')
+            diff1.id = `diff1_desc_${sense}`
+            diff1.name = `diff1_desc_${sense}`
+            diff1.type = 'text'
+
+            let diff2 = document.createElement('input')
+            diff2.id = `diff2_desc_${sense}`
+            diff2.name = `diff2_desc_${sense}`
+            diff2.type = 'text'
+
             let follow_on = document.getElementById(`dropdown_followon_${sense}`)
-            follow_on.innerHTML = ' because'
+            follow_on.innerHTML = '. They are similar because'
             let insert_point = document.getElementById(`similarity_${sense}`)
             insert_point.innerHTML = 'they both '
             insert_point.appendChild(similarity)
-            insert_point.innerHTML += '.'
+            insert_point.innerHTML += `, but different<br>because <b>${similar_to}</b> `
+            insert_point.appendChild(diff1)
+            insert_point.innerHTML += `, while<br>this sense `
+            insert_point.appendChild(diff2)
+            insert_point.innerHTML += `.`
+
         }
     }
 }
