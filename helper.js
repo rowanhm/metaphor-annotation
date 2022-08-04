@@ -356,9 +356,15 @@ class Renderer {
             for (let i = 0; i < synonyms.length; i++) {
                 const synonym = synonyms[i]
                 const synonym_string = synonym['string']
+                const synonym_sense_id = synonym['sense_id']
                 let italic = document.createElement('i')
                 italic.innerHTML += synonym_string.replaceAll('_', ' ')
-                definition.appendChild(italic)
+                if (deep_linked) {
+                    definition.appendChild(this.linked_text(`<i>${synonym_string.replaceAll('_', ' ')}</i>`, synonym_sense_id))
+                } else {
+                    definition.appendChild(italic)
+                }
+
                 if (i < synonyms.length - 1) {
                     definition.innerHTML += ', '
                 }
@@ -405,17 +411,7 @@ class Renderer {
             // Add text between this annotation and the last
             definition.innerHTML += string.slice(old_end_index, start_index)
 
-            // Add hyperlinked text
-            let linked_text = document.createElement("span");
-            linked_text.innerHTML = string.slice(start_index, end_index)
-            linked_text.classList.add('tooltip')
-
-            // add hover
-            let hover_over = this.create_definition(sense_id, false)
-            hover_over.classList.add('tooltiptext')
-            linked_text.appendChild(hover_over)
-
-            definition.appendChild(linked_text)
+            definition.appendChild(this.linked_text(string.slice(start_index, end_index), sense_id))
             
             old_end_index = end_index
         }
@@ -423,6 +419,18 @@ class Renderer {
         return definition
     }
 
+    linked_text(text_string, sense_id) {
+        let linked_text = document.createElement("span");
+        linked_text.innerHTML = text_string
+        linked_text.classList.add('tooltip')
+
+        // add hover
+        let hover_over = this.create_definition(sense_id, false)
+        hover_over.classList.add('tooltiptext')
+        linked_text.appendChild(hover_over)
+
+        return linked_text
+    }
     submit_annotation() {
         // Extract data
 
@@ -445,29 +453,38 @@ class Renderer {
                 failures.push(`<b>${sense_id}</b> has no label assigned.`)
 
             } else if (label === "metaphorical") {
-                let derived_from = ""
-                let similarity = ""
-                let diff1 = ""
-                let diff2 = ""
+
                 let dropdown = document.getElementById("select_"+sense_id)
                 if (dropdown.selectedIndex > 0) {
-                    derived_from = dropdown.value
-                    similarity = document.getElementById(`similarity_desc_${sense_id}`).value
-                    diff1 = document.getElementById(`diff1_desc_${sense_id}`).value
-                    diff2 = document.getElementById(`diff2_desc_${sense_id}`).value
+                    let derived_from = dropdown.value
+                    let similarity = document.getElementById(`similarity_desc_${sense_id}`).value
+                    let diff1 = document.getElementById(`diff1_desc_${sense_id}`).value
+                    let diff2 = document.getElementById(`diff2_desc_${sense_id}`).value
                     if ((similarity === "") || (diff1 === "") || (diff2 === "")) {
                         // No description
                         failures.push(`<b>${sense_id}</b> is metaphorically related to <b>${derived_from}</b>, but a complete description of the similarity/difference is not provided.`)
+                    } else {
+                        sense_data['derivation'] = derived_from
+                        sense_data['feature_same'] = similarity
+                        sense_data['feature_other'] = diff1
+                        sense_data['feature_this'] = diff2
                     }
+
+                    if (derived_from === 'missing sense') {
+                        let definition = document.getElementById(`definition_${sense_id}`).value
+                        if (definition === "") {
+                            failures.push(`<b>${sense_id}</b> is metaphorically related to <b>${derived_from}</b>, but that sense is not defined.`)
+                        } else {
+                            sense_data['definition'] = derived_from
+                        }
+                    }
+
                 } else {
                     // No metaphorical derivation
                     failures.push(`<b>${sense_id}</b> is labelled as metaphorical, but no similar sense is selected.`)
                 }
 
-                sense_data['derivation'] = derived_from
-                sense_data['feature_same'] = similarity
-                sense_data['feature_other'] = diff1
-                sense_data['feature_this'] = diff2
+
             }
             return_data[sense_id] = sense_data
         }
@@ -565,6 +582,11 @@ class Renderer {
                 select_list.appendChild(option);
             }
 
+            let hidden_option = document.createElement("option");
+            hidden_option.value = 'missing sense';
+            hidden_option.text = 'missing sense';
+            select_list.appendChild(hidden_option);
+
             // Add it to the correct point
             let insert_point = document.getElementById(`dropdown_${sense}`);
             insert_point.innerHTML = 'Related to '
@@ -605,6 +627,7 @@ class Renderer {
             document.getElementById(`dropdown_followon_${sense}`).innerHTML = ''
 
         } else {
+
             // Add text box
             let similar_to = document.getElementById("select_"+sense).value
 
@@ -624,16 +647,38 @@ class Renderer {
             diff2.type = 'text'
 
             let follow_on = document.getElementById(`dropdown_followon_${sense}`)
-            follow_on.innerHTML = '. They are similar because'
             let insert_point = document.getElementById(`similarity_${sense}`)
-            insert_point.innerHTML = 'they both '
-            insert_point.appendChild(similarity)
-            insert_point.innerHTML += `, but different<br>because <b>${similar_to}</b> `
-            insert_point.appendChild(diff1)
-            insert_point.innerHTML += `, while<br>this sense `
-            insert_point.appendChild(diff2)
-            insert_point.innerHTML += `.`
 
+            if (similar_to === 'missing sense') {
+
+                let definition = document.createElement('input')
+                definition.id = `definition_${sense}`
+                definition.name = `definition_${sense}`
+                definition.type = 'text'
+                definition.size = 55
+
+                follow_on.innerHTML = ', which is defined as:'
+                insert_point.innerHTML = ""
+                insert_point.appendChild(definition)
+                insert_point.innerHTML += '.<br> They are similar because they both '
+                insert_point.appendChild(similarity)
+                insert_point.innerHTML += `,<br>but different because the other sense `
+                insert_point.appendChild(diff1)
+                insert_point.innerHTML += `,<br>while this sense `
+                insert_point.appendChild(diff2)
+                insert_point.innerHTML += `.`
+
+            } else {
+
+                follow_on.innerHTML = '. They are similar because'
+                insert_point.innerHTML = 'they both '
+                insert_point.appendChild(similarity)
+                insert_point.innerHTML += `, but different<br>because <b>${similar_to}</b> `
+                insert_point.appendChild(diff1)
+                insert_point.innerHTML += `, while<br>this sense `
+                insert_point.appendChild(diff2)
+                insert_point.innerHTML += `.`
+            }
         }
     }
 }
