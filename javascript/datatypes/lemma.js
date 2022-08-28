@@ -24,6 +24,13 @@ export class Lemma {
             i++
         }
         this.next_available_index = i
+
+        this.new_sense_id = 0
+    }
+
+    get_next_new_sense_id() {
+        this.new_sense_id += 1
+        return this.new_sense_id
     }
 
     all_senses() {
@@ -41,42 +48,6 @@ export class Lemma {
         }
         let groups_ordered = Array.from(groups).sort((a, b) => a - b);
         return groups_ordered
-    }
-
-    all_sense_ids() {
-        return this.new_id_order
-    }
-
-    root_sense_ids() {
-        let output = []
-        for (const sense of this.all_senses()) {
-            if (sense instanceof LiteralSense) {
-                if (sense.is_root()) {
-                    output.push(sense.new_sense_id)
-                }
-            }
-        }
-        return output
-    }
-
-    literal_sense_ids() {
-        let output = []
-        for (const sense of this.all_senses()) {
-            if (sense instanceof LiteralSense) {
-                output.push(sense.new_sense_id)
-            }
-        }
-        return output
-    }
-
-    metaphorical_sense_ids() {
-        let output = []
-        for (const sense of this.all_senses()) {
-            if (sense instanceof MetaphoricalSense) {
-                output.push(sense.new_sense_id)
-            }
-        }
-        return output
     }
 
     metaphorical_senses() {

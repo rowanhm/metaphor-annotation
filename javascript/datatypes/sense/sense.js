@@ -18,6 +18,7 @@ export class Sense {
             this.tool_cell = sense.tool_cell
             this.row = sense.row
             this.definition = sense.definition
+            this.backend_sense_id = sense.backend_sense_id
 
             // Embed
             this.embed_with_removal(sense)
@@ -25,7 +26,7 @@ export class Sense {
     }
 
     get_label() {
-        return null
+        return 'None'
     }
 
     remove() {
@@ -74,6 +75,7 @@ export class Sense {
     initialise_wordnet_sense(lemma, wordnet_sense_id, new_sense_id) {
 
         this.lemma = lemma
+        this.backend_sense_id = `wordnet:${wordnet_sense_id}`
         this.new_sense_id = new_sense_id
         this.definition = new WordNetDefinition(lemma, wordnet_sense_id)
 
@@ -83,6 +85,7 @@ export class Sense {
 
     initialise_custom_sense(lemma, new_sense_id) {
         this.lemma = lemma
+        this.backend_sense_id = `new:${this.lemma.get_next_new_sense_id()}`
         this.new_sense_id = new_sense_id
         this.definition = new CustomDefinition()
 
@@ -179,6 +182,12 @@ export class Sense {
         this.row.style.backgroundColor = '#FFFFFF'
     }
 
+    get_data() {
+        let sense_data = {}
+        sense_data['label'] = this.get_label()
+        return sense_data
+    }
+
     make_definition_cell(){
         this.definition_cell = this.definition.make_definition_cell()
     }
@@ -186,6 +195,4 @@ export class Sense {
     make_image_cell(){
         this.image_cell = this.definition.make_image_cell()
     }
-
-
 }

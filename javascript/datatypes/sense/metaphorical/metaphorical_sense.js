@@ -23,7 +23,6 @@ export class MetaphoricalSense extends Sense {
 
     get_missing_feature() {
         return this.missing_feature_input.value
-
     }
 
     get_label() {
@@ -222,5 +221,16 @@ export class MetaphoricalSense extends Sense {
         this.lemma.refresh()
     }
 
-
+    get_data() {
+        let sense_data = super.get_data()
+        sense_data['resembles'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
+        const derivation = this.get_same_derivation()
+        if (derivation === null) {
+            sense_data['shared_feature'] = this.get_shared_feature()
+            sense_data['missing_feature'] = this.get_missing_feature()
+        } else{
+            sense_data['same_derivation_as'] = this.lemma.get_sense(this.get_same_derivation()).backend_sense_id
+        }
+        return sense_data
+    }
 }

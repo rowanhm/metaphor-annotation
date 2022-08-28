@@ -116,69 +116,25 @@ export class Screen {
     submit_annotation() {
         // Extract data
 
-        let failures = []
         let return_data = {};
 
-        for (const sense_id of this.all_senses) {
-            let sense_data = {}
-            let label = null
-            for (const option of this.label_options) {
-                if (document.getElementById(`${option.toLowerCase()}_${sense_id}`).checked) {
-                    // TODO assert label is null -- can't have multiple selected
-                    label = option.toLowerCase()
+        for (const sense of this.lemma.all_senses()) {
+            const sense_id = sense.backend_sense_id
+            let sense_data = sense.get_data()
+            if (sense_id in return_data) {
+                // Add the additional data
+                for (const [key, value] of Object.entries(sense_data)) {
+                    return_data[sense_id][key] = value
                 }
+            } else {
+                return_data[sense_id] = sense_data
             }
-            sense_data['label'] = label
-
-            if (label == null) {
-                // No radio button selected
-                failures.push(`<b>${sense_id}</b> has no label assigned.`)
-
-            } else if (label === "metaphorical") {
-
-                let dropdown = document.getElementById("select_"+sense_id)
-                if (dropdown.selectedIndex > 0) {
-                    let derived_from = dropdown.value
-                    let similarity = document.getElementById(`similarity_desc_${sense_id}`).value
-                    let diff1 = document.getElementById(`diff1_desc_${sense_id}`).value
-                    //let diff2 = document.getElementById(`diff2_desc_${sense_id}`).value
-                    if ((similarity === "") || (diff1 === "")) { //|| (diff2 === "")) {
-                        // No description
-                        failures.push(`<b>${sense_id}</b> is metaphorically related to <b>${derived_from}</b>, but a complete description of the similarity/difference is not provided.`)
-                    } else {
-                        sense_data['derivation'] = derived_from
-                        sense_data['feature_same'] = similarity
-                        sense_data['feature_diff'] = diff1
-                        //sense_data['feature_this'] = diff2
-                    }
-
-                } else {
-                    // No metaphorical derivation
-                    failures.push(`<b>${sense_id}</b> is labelled as metaphorical, but no similar sense is selected.`)
-                }
-
-
-            }
-            return_data[sense_id] = sense_data
         }
-        if (failures.length === 0) {
-            // Submit to server
-            save_lemma(this.user_id, this.queue_name, this.lemma, return_data).then(() => {
-                // Next word
-                this.manager.update_queue_and_render()
-            })
 
-
-        } else {
-            // Warn
-            let warning_box = document.getElementById('warnings')
-            let warnings = `<p style="color:red">Unable to submit:<br>`
-            for (const failure of failures) {
-                warnings += `&nbsp;&nbsp;&nbsp;&nbsp;* ${failure}<br>`
-            }
-            warnings += "</p>"
-            warning_box.innerHTML = warnings
-        }
+        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data).then(() => {
+            // Next word
+            this.manager.update_queue_and_render()
+        })
 
         return false
     }

@@ -111,4 +111,10 @@ export class LiteralSense extends Sense {
         console.log(`${this.new_sense_id} in group ${this.group}`)
         this.lemma.refresh()
     }
+
+    get_data() {
+        let sense_data = super.get_data()
+        sense_data['group'] = this.get_group()
+        return sense_data
+    }
 }
