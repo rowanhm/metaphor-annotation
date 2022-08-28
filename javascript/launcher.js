@@ -11,6 +11,8 @@ class Manager {
 
     async initialise_credentials(){
 
+        this.set_screen_text('Loading...')
+
         this.lemma_queues = await load_json("data/extracted/queues.json")
         this.queue = this.lemma_queues[this.queue_name]
         this.datastore = new Datastore()
