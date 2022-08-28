@@ -30,12 +30,12 @@ export class MixedMetaphoricalSense extends MetaphoricalSense {
     }
 
     fill_row() {
+        // skip tool cell
         this.row.innerHTML = ''
         this.row.appendChild(this.name_cell)
         this.row.appendChild(this.definition_cell)
         this.row.appendChild(this.image_cell)
         this.row.appendChild(this.label_selector_cell)
         this.row.appendChild(this.info_cell)
-        this.row.style.backgroundColor = '#C0DDFA'
     }
 }

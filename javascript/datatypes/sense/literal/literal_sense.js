@@ -5,7 +5,12 @@ export class LiteralSense extends Sense {
     // Handles extra info of literals (root, related to)
     constructor(sense) {
         super(sense);
-        this.related_to = null
+        if (!(sense instanceof LiteralSense)) {
+            this.group = null
+        } else {
+            this.group = sense.group
+        }
+        this.insane = true
     }
 
     get_label() {
@@ -14,101 +19,96 @@ export class LiteralSense extends Sense {
 
     sanify() {
         if (this.insane) {
-            if (this.related_to !== null) {
-                if (this.lemma.new_id_order.includes(this.related_to)) {
-                    if (this.new_sense_id !== this.related_to) { // If its a root thats fine
-                        const related_sense = this.lemma.get_sense(this.related_to)
-                        this.related_to = null
-                        if (related_sense instanceof LiteralSense) {  // Derivation sense has to be a metaphor
-                            if (related_sense.is_root()) {  // Derivation sense has to have the same group
-                                this.related_to = related_sense.new_sense_id
-                            }
-                        }
-                    }
-                } else {
-                    this.related_to = null
-                }
-            }
             this.insane = false
         }
     }
 
-    get_related_to() {
+    get_group() {
         this.sanify()
-        return this.related_to
+        return this.group
     }
 
-    set_related_to(sense_id) {
-        console.log(`Setting ${this.new_sense_id} to be related to ${sense_id}`)
-        this.related_to = sense_id
+    set_group(group_number) {
+        console.log(`Setting ${this.new_sense_id} to group ${group_number}`)
+        this.group = group_number
         this.insane = true
     }
 
-    is_root() {
-        return (this.get_related_to() === this.new_sense_id)
-    }
-
-    fill_row() {
-        super.fill_row();
+    set_colour() {
         this.row.style.backgroundColor = '#FAF4DD'
     }
 
-    fill_name_cell() {
-        super.fill_name_cell();
-        if (this.is_root()) {
-            this.name_cell.innerHTML += '&#127794;'
-        } else {
-            this.name_cell.innerHTML += '&#127807;'
+    fill_info_cell() {
+        console.log(`Filling info for ${this.new_sense_id} (group ${this.get_group()})`)
+        this.info_cell.innerHTML = ''
+        let no_break = document.createElement('nobr')
+
+        no_break.innerHTML = 'In group '
+
+        let select_group = document.createElement("select");
+        select_group.id = `${this.new_sense_id}:group_select`
+        let that = this
+        select_group.onchange = function(){
+            that.update_group()
         }
+
+        let blank_option = document.createElement("option");
+        blank_option.value = null
+        blank_option.disabled = true
+        blank_option.hidden = true
+        blank_option.innerHTML = 'select';
+        select_group.appendChild(blank_option)
+
+        let found_group = false
+        if (this.get_group() === null){
+            blank_option.selected = true
+            found_group = true
+        }
+
+        const groups = this.lemma.get_groups()
+
+        for (const group of groups) {
+            if (group !== null) {
+
+                let option = document.createElement("option");
+                option.value = group.toString();
+                option.text = group.toString();
+                if (group === this.get_group()) {
+                    // Select
+                    option.selected = true
+                    found_group = true
+                }
+                select_group.appendChild(option);
+            }
+        }
+
+        // Add new group option
+        let next_lowest_group = 1
+        while (groups.includes(next_lowest_group)) {
+            next_lowest_group++
+        }
+
+        let option = document.createElement("option");
+        option.value = next_lowest_group.toString();
+        option.text = `${next_lowest_group} (new)`;
+        select_group.appendChild(option);
+
+        if (!found_group) {
+            console.error(`Failed to find group for sense ${this.new_sense_id}`)
+        }
+
+        no_break.appendChild(select_group)
+        this.info_cell.appendChild(no_break)
     }
 
-    fill_info_cell() {
-        console.log(`Filling info for ${this.new_sense_id} (related to ${this.get_related_to()})`)
-
-        let that = this
-        const select_name = `${this.new_sense_id}:root_select`
-        this.info_cell.innerHTML = ''
-
-        let list_of_sense_ids = this.lemma.root_sense_ids()
-        const position = list_of_sense_ids.indexOf(this.new_sense_id)
-        if (position !== -1) {
-            list_of_sense_ids.splice(position, 1)
+    update_group() {
+        const dropdown = document.getElementById(`${this.new_sense_id}:group_select`)
+        let value = dropdown.value
+        if (value !== null) {
+            value = parseInt(value)
         }
-        list_of_sense_ids.unshift(this.new_sense_id)
-
-        let found_related = false
-        for (const sense_id of list_of_sense_ids) {
-            let no_break = document.createElement('nobr')
-            const name = `${this.new_sense_id}:root_select:${sense_id}`
-
-            let input = document.createElement("input");
-            input.type = "radio"
-            input.name = select_name
-            input.id = name
-            input.onclick = function () {
-                that.set_related_to(sense_id)
-                that.lemma.refresh()
-            }
-            if (this.get_related_to() === sense_id) {
-                input.checked = true
-                found_related = true
-            }
-            no_break.appendChild(input)
-
-            let label = document.createElement("label");
-            label.htmlFor = name
-            if (this.new_sense_id === sense_id) {
-                label.innerHTML += 'Root sense'
-            } else {
-                label.innerHTML += `Related to ${this.lemma.get_sense(sense_id).get_outward_facing_id()}`
-            }
-            no_break.appendChild(label)
-
-            no_break.appendChild(document.createElement("br"))
-            this.info_cell.appendChild(no_break)
-        }
-        if ((!found_related) && (this.get_related_to() !== null)) {
-            console.error(`Could not find related (${this.new_sense_id} related to ${this.get_related_to()})`)
-        }
+        this.set_group(value)
+        console.log(`${this.new_sense_id} in group ${this.group}`)
+        this.lemma.refresh()
     }
 }

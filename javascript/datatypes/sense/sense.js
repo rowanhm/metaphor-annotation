@@ -146,6 +146,7 @@ export class Sense {
     }
 
     fill_info_cell() {
+        this.info_cell.innerHTML = ''
     }
 
     make_row() {
@@ -160,6 +161,7 @@ export class Sense {
 
         // Attach all cells
         this.fill_row()
+        this.set_colour()
 
     }
 
@@ -171,6 +173,10 @@ export class Sense {
         this.row.appendChild(this.label_selector_cell)
         this.row.appendChild(this.info_cell)
         this.row.appendChild(this.tool_cell)
+    }
+
+    set_colour() {
+        this.row.style.backgroundColor = '#FFFFFF'
     }
 
     make_definition_cell(){

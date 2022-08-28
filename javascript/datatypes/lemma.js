@@ -34,6 +34,15 @@ export class Lemma {
         return output
     }
 
+    get_groups() {
+        let groups = new Set()
+        for (const sense of this.literal_senses()) {
+            groups.add(sense.get_group())
+        }
+        let groups_ordered = Array.from(groups).sort((a, b) => a - b);
+        return groups_ordered
+    }
+
     all_sense_ids() {
         return this.new_id_order
     }
@@ -74,6 +83,16 @@ export class Lemma {
         let output = []
         for (const sense of this.all_senses()) {
             if (sense instanceof MetaphoricalSense) {
+                output.push(sense)
+            }
+        }
+        return output
+    }
+
+    literal_senses() {
+        let output = []
+        for (const sense of this.all_senses()) {
+            if (sense instanceof LiteralSense) {
                 output.push(sense)
             }
         }
@@ -125,8 +144,10 @@ export class Lemma {
         let sense = this.new_id_to_sense.get(new_sense_id)
         const insert_position = sense.remove()
         // Reinsert the base sense
-        sense.base_sense.embed(insert_position)
-        sense.base_sense.build_cells() // Needed to fix reference issue
+        let base_sense = sense.base_sense
+        base_sense.embed(insert_position)
+        base_sense.build_cells() // Needed to fix reference issue
+        new Sense(base_sense) // Downcast it to remove literality
         this.mark_all_insane()
         this.refresh()
     }

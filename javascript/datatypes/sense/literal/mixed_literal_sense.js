@@ -24,7 +24,7 @@ export class MixedLiteralSense extends LiteralSense {
         // Remove it and the met mixed
         const position = this.lemma.new_id_order.indexOf(this.new_sense_id)
         this.lemma.new_id_to_sense.delete(this.base_sense.new_sense_id+'L')
-        this.lemma.new_id_to_sense.delete(this.base_sense.new_sense_id+'R')
+        this.lemma.new_id_to_sense.delete(this.base_sense.new_sense_id+'M')
         this.lemma.new_id_order.splice(position, 2)
         return position
     }
