@@ -40,4 +40,10 @@ export class MixedMetaphoricalSense extends MetaphoricalSense {
         this.row.appendChild(this.relation_cell)
         this.row.appendChild(this.feature_cell)
     }
+
+    get_data() {
+        let data = super.get_data();
+        data['Label'] = 'Mixed'
+        return data
+    }
 }

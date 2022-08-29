@@ -46,4 +46,10 @@ export class MixedLiteralSense extends LiteralSense {
     fill_label_cell() {
         this.label_selector_cell.innerHTML = 'Literal'
     }
+
+    get_data() {
+        let data = super.get_data();
+        data['Label'] = 'Mixed'
+        return data
+    }
 }

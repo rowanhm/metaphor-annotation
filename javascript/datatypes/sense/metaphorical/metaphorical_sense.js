@@ -297,6 +297,9 @@ export class MetaphoricalSense extends Sense {
                 found_pos_feature = true
             } else if (feature_label === 'modified' || feature_label === 'no') {
                 found_neg_feature = true
+            } else {
+                // feature is null
+                return false
             }
         }
         if (found_neg_feature && found_pos_feature) {
