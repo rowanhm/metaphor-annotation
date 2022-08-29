@@ -8,35 +8,42 @@ export class MetaphoricalSense extends Sense {
     constructor(sense) {
         super(sense);
         this.resembles = null
-        this.same_derivation = null
-
-        this.shared_feature_input = document.createElement('input')
-        this.shared_feature_input.type = 'text'
-
-        this.missing_feature_input = document.createElement('input')
-        this.missing_feature_input.type = 'text'
+        this.reset_features()
     }
 
-    get_shared_feature() {
-        return this.shared_feature_input.value
+
+    set_feature_label(feature_id, label) {
+        this.feature_labels[feature_id] = label
+        this.insane = true
+        this.lemma.refresh()
     }
 
-    get_missing_feature() {
-        return this.missing_feature_input.value
+    get_feature_label(feature_id) {
+        this.sanify()
+        return this.feature_labels[feature_id]
+    }
+
+    get_feature_labels() {
+        this.sanify()
+        return this.feature_labels
+    }
+
+    get_transformation_input(feature_id) {
+        this.sanify()
+        return this.feature_transformation_inputs[feature_id]
+    }
+
+    get_transformations() {
+        this.sanify()
+        let output = {}
+        for (const [feature_id, transformation_input] of Object.entries(this.feature_transformation_inputs)) {
+            output[feature_id] = transformation_input.value
+        }
+        return output
     }
 
     get_label() {
         return 'Metaphorical'
-    }
-
-    get_same_derivation() {
-        this.sanify()
-        return this.same_derivation
-    }
-
-    set_same_derivation(sense_id) {
-        this.same_derivation = sense_id
-        this.insane = true
     }
 
     get_resembles() {
@@ -45,34 +52,77 @@ export class MetaphoricalSense extends Sense {
     }
 
     set_resembles(sense_id) {
-        this.resembles = sense_id
+        if (this.resembles !== sense_id) {
+            this.reset_features()
+            this.resembles = sense_id
+            this.insane = true
+            this.lemma.refresh()
+        }
+    }
+
+    reset_features() {
+        this.feature_labels = {}
+        this.feature_transformation_inputs = {}
         this.insane = true
     }
 
     sanify() {
         if (this.insane) {
             // Make sure the thing it resembles is a literal
+            let resembles_sense = null
             if (this.resembles !== null) {
+                resembles_sense = this.lemma.get_sense(this.resembles)
+
                 if (!this.lemma.new_id_order.includes(this.resembles)) {
                     this.resembles = null
-                } else if (!(this.lemma.get_sense(this.resembles) instanceof LiteralSense)) {
+                } else if (!(resembles_sense instanceof LiteralSense)) {
                     this.resembles = null
                 }
             }
 
-            // Make sure the thing it is similar to is a metaphor, and the same resembles
-            if (this.same_derivation !== null) {
-                if (this.lemma.new_id_order.includes(this.resembles)) {
-                    const derivation_sense = this.lemma.get_sense(this.same_derivation)
-                    this.same_derivation = null
-                    if (derivation_sense instanceof MetaphoricalSense) {  // Derivation sense has to be a metaphor
-                        if (derivation_sense.get_resembles() === this.resembles) {  // Derivation sense has to have the same group
-                            if (derivation_sense.get_same_derivation() === null) {  // Derivation sense has to be a root
-                                this.same_derivation = derivation_sense.new_sense_id
+            // Handle features
+            if (this.resembles !== null) {
+
+                let found_features = new Set()
+                const features = resembles_sense.get_features()
+                // Create feature_labels for missing features
+                for (const [feature_id, feature_text] of Object.entries(features)) {
+                    found_features.add(feature_id)
+                    if (!(feature_id in this.feature_labels)) {
+                        this.feature_labels[feature_id] = null
+                    }
+                }
+
+                // Remove feature_labels for features not in literal parent
+                // Remove feature_transformations for features not in literal parent
+                for (const [feature_id, feature_label] of Object.entries(this.feature_labels)) {
+                    if (!(found_features.has(feature_id))) {
+                        delete this.feature_labels[feature_id]
+                        if (feature_id in this.feature_transformation_inputs) {
+                            delete this.feature_transformation_inputs[feature_id]
+                        }
+                    } else {
+                        // Is contained
+                        if (this.feature_labels[feature_id] !== 'modified') {
+                            if (feature_id in this.feature_transformation_inputs) {
+                                delete this.feature_transformation_inputs[feature_id]
+                            }
+                        } else {
+                            if (!(feature_id in this.feature_transformation_inputs)) {
+                                // Add the transformation
+                                // If it is transformed, initialise the value with the same text
+                                let feature_transformation_input = document.createElement('input')
+                                feature_transformation_input.type = 'text'
+                                feature_transformation_input.value = this.lemma.get_sense(this.resembles).get_feature(feature_id)
+                                this.feature_transformation_inputs[feature_id] = feature_transformation_input
                             }
                         }
                     }
                 }
+
+            } else {
+                // Reset features
+                this.reset_features()
             }
             this.insane = false
         }
@@ -82,9 +132,9 @@ export class MetaphoricalSense extends Sense {
         this.row.style.backgroundColor = '#C0DDFA'
     }
 
-    fill_info_cell() {
+    fill_relation_cell() {
         // Make dropdown selection
-        this.info_cell.innerHTML = ''
+        this.relation_cell.innerHTML = ''
 
         let resemblance_cell = document.createElement('nobr')
         resemblance_cell.innerHTML = 'Resembles '
@@ -131,79 +181,93 @@ export class MetaphoricalSense extends Sense {
         }
 
         resemblance_cell.appendChild(select_resemblance)
-        this.info_cell.appendChild(resemblance_cell)
+        this.relation_cell.appendChild(resemblance_cell)
+    }
 
-        // Continue if it has something selected
-        if (this.get_resembles() !== null) {
+    fill_features_cell() {
+        this.feature_cell.innerHTML = ''
+        const resembles_sense = this.lemma.get_sense(this.get_resembles())
+        if (this.get_resembles() === null) {
+            // No resembled sense selected
+            let instruction_text = document.createElement('i')
+            instruction_text.innerHTML = 'Select a resemblance to inherit its features'
+            this.feature_cell.appendChild(instruction_text)
+        } else {
+            const features = resembles_sense.get_features()
+            if (Object.keys(features).length === 0) {
+                // No features
+                let instruction_text = document.createElement('i')
+                instruction_text.innerHTML = `Add features to ${resembles_sense.get_outward_facing_id()} to get started`
+                this.feature_cell.appendChild(instruction_text)
+            } else {
+                // Iterate through the shared features and the mapping
+                let subtable = document.createElement('table')
+                this.feature_cell.appendChild(subtable)
 
-            this.info_cell.appendChild(document.createElement('hr'))
+                for (const [feature_id, feature_text] of Object.entries(features)) {
+                    let row = document.createElement('tr')
+                    subtable.appendChild(row)
 
-            // Derivation part
+                    // Add text
+                    let text_cell = document.createElement('td')
+                    text_cell.style.textAlign = 'left'
+                    let no_break = document.createElement('nobr')
+                    no_break.innerHTML = `This thing ${feature_text}?`
+                    text_cell.appendChild(no_break)
+                    row.appendChild(text_cell)
 
-            let derivation_cell = document.createElement('div')
-            derivation_cell.innerHTML = ''
+                    // Add options
+                    let radio_cell = document.createElement('td')
+                    let option_list = document.createElement('nobr')
+                    row.appendChild(radio_cell)
+                    radio_cell.appendChild(option_list)
 
-            let no_break = document.createElement('nobr')
-            no_break.innerHTML = 'Same derivation as '
+                    const radio_name = `${this.new_sense_id}:feature_select_${feature_id}`
+                    let that = this
+                    const feature_label = this.get_feature_label(feature_id)
+                    for (const option of ['Yes', 'No', 'Modified']) {
+                        const name = `${radio_name}:${option.toLowerCase()}`
 
-            let select_derivation = document.createElement("select");
-            select_derivation.id = `${this.new_sense_id}:derivation_select`
-            select_derivation.onchange = function () {
-                that.update_derivation()
-            }
+                        let input = document.createElement("input");
+                        input.type = "radio"
+                        input.name = radio_name
+                        input.id = name
+                        input.onclick = function () {
+                            that.set_feature_label(feature_id, option.toLowerCase())
+                        }
+                        option_list.appendChild(input)
 
-            let new_option = document.createElement("option");
-            new_option.value = null
-            new_option.disabled = false
-            new_option.text = 'none (new derivation)';
-            select_derivation.appendChild(new_option)
+                        let label = document.createElement("label");
+                        label.htmlFor = name
+                        label.innerHTML += option
 
-            // Add options
-            let found_derivation = false
-            if (this.get_same_derivation() === null) {
-                new_option.selected = true
-                found_derivation = true
-            }
-            for (const other_sense of this.lemma.all_senses()) {
-                const other_sense_id = other_sense.new_sense_id
-                let option = document.createElement("option");
-                option.value = other_sense_id;
-                option.text = other_sense.get_outward_facing_id();
-                option.disabled = true
-                if (other_sense instanceof MetaphoricalSense) {
-                    if (other_sense.get_resembles() === this.get_resembles() && other_sense_id !== this.new_sense_id && other_sense.get_same_derivation() === null)
-                        option.disabled = false
-                    if (other_sense_id === this.get_same_derivation()) {
-                        // Select
-                        option.selected = true
-                        found_derivation = true
+                        if (option.toLowerCase() === feature_label){
+                            input.checked = true
+                        }
+
+                        option_list.appendChild(label)
+
+                    }
+
+                    // Add transformation row
+                    if (feature_label === 'modified') {
+                        let modification_row = document.createElement('tr')
+                        let modification_cell = document.createElement('td')
+                        modification_cell.style.textAlign = 'left'
+
+                        let no_break = document.createElement('nobr')
+
+                        subtable.appendChild(modification_row)
+                        modification_row.appendChild(modification_cell)
+                        modification_cell.colSpan = '2'
+
+                        modification_cell.appendChild(no_break)
+                        no_break.innerHTML = '=> This thing '
+
+                        no_break.appendChild(this.get_transformation_input(feature_id))
                     }
                 }
-                select_derivation.appendChild(option);
             }
-            if (!found_derivation) {
-                console.error('Failed to find derivation')
-            }
-
-            no_break.appendChild(select_derivation)
-            derivation_cell.appendChild(no_break)
-
-            if (this.get_same_derivation() === null && this.get_resembles() !== null) {
-                derivation_cell.appendChild(document.createElement('br'))
-                const resembles_name = this.lemma.get_sense(this.get_resembles()).get_outward_facing_id()
-                let para = document.createElement('p')
-
-                para.innerHTML = `This sense is similar to ${resembles_name} because they both `
-
-                para.appendChild(this.shared_feature_input)
-                let span = document.createElement('span')
-                span.innerHTML = ` but different because only ${resembles_name} `
-                para.appendChild(span)
-                para.appendChild(this.missing_feature_input)
-                derivation_cell.appendChild(para)
-            }
-
-            this.info_cell.appendChild(derivation_cell)
         }
     }
 
@@ -214,23 +278,31 @@ export class MetaphoricalSense extends Sense {
         this.lemma.refresh()
     }
 
-    update_derivation() {
-        const dropdown = document.getElementById(`${this.new_sense_id}:derivation_select`)
-        this.set_same_derivation(dropdown.value)
-        console.log(`${this.new_sense_id} same derivation as ${this.same_derivation}`)
-        this.lemma.refresh()
-    }
-
     get_data() {
         let sense_data = super.get_data()
         sense_data['resembles'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
-        const derivation = this.get_same_derivation()
-        if (derivation === null) {
-            sense_data['shared_feature'] = this.get_shared_feature()
-            sense_data['missing_feature'] = this.get_missing_feature()
-        } else{
-            sense_data['same_derivation_as'] = this.lemma.get_sense(this.get_same_derivation()).backend_sense_id
-        }
+        sense_data['feature_map'] = this.get_feature_labels()
+        sense_data['feature_modifications'] = this.get_transformations()
         return sense_data
     }
+
+    is_stable() {
+        if (this.get_resembles() === null) {
+            return false
+        }
+        let found_neg_feature = false
+        let found_pos_feature = false
+        for (const [feature_id, feature_label] of Object.entries(this.get_feature_labels())) {
+            if (feature_label === 'yes') {
+                found_pos_feature = true
+            } else if (feature_label === 'modified' || feature_label === 'no') {
+                found_neg_feature = true
+            }
+        }
+        if (found_neg_feature && found_pos_feature) {
+            return true
+        }
+        return false
+    }
+
 }

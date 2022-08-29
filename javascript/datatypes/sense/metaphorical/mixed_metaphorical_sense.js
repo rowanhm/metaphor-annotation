@@ -7,6 +7,7 @@ export class MixedMetaphoricalSense extends MetaphoricalSense {
     constructor(sense) {
         console.log('Creating mixed metaphorical sense')
         super(sense);
+        this.definition = this.definition.copy()
         this.build_cells() // Needed to get new references
         this.resembles = this.new_sense_id + 'L'
 
@@ -33,9 +34,10 @@ export class MixedMetaphoricalSense extends MetaphoricalSense {
         // skip tool cell
         this.row.innerHTML = ''
         this.row.appendChild(this.name_cell)
-        this.row.appendChild(this.definition_cell)
-        this.row.appendChild(this.image_cell)
+        this.row.appendChild(this.definition.definition_cell)
+        this.row.appendChild(this.definition.image_cell)
         this.row.appendChild(this.label_selector_cell)
-        this.row.appendChild(this.info_cell)
+        this.row.appendChild(this.relation_cell)
+        this.row.appendChild(this.feature_cell)
     }
 }

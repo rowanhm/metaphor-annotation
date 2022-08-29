@@ -37,7 +37,7 @@ export class Screen {
         let header = document.createElement('thead')
         let header_row = document.createElement("tr")
         header_row.style.borderTop = '2px solid black'
-        const headers = ['ID', 'Definition', 'Image', 'Label', 'Extra&nbsp;Information', 'Tools']
+        const headers = ['ID', 'Definition', 'Image', 'Label', 'Relation', 'Features', 'Tools']
         for (const header of headers) {
             let cell = make_empty_cell()
             cell.innerHTML = '<b>' + header + '</b>'
@@ -67,7 +67,7 @@ export class Screen {
         footer_row.appendChild(count_cell)
 
         let submit_cell = document.createElement('td')
-        submit_cell.colSpan = '4'
+        submit_cell.colSpan = '5'
         submit_cell.style.paddingTop = `8px`
         submit_cell.style.textAlign = 'right'
         let submit = document.createElement("input");
@@ -80,20 +80,34 @@ export class Screen {
         new_sense.type = 'button'
         new_sense.onclick = function () { that.lemma.new_ghost_sense() }
         new_sense.innerHTML = 'New ghost sense'
+        let open_wordnet = document.createElement("button")
+        open_wordnet.type = 'button'
+        open_wordnet.onclick = function () { that.open_wordnet(that.lemma.word) }
+        open_wordnet.innerHTML = 'Open in WordNet'
 
         submit_cell.appendChild(new_sense)
+        let span = document.createElement('span')
+        span.innerHTML = '&ensp;'
+        submit_cell.appendChild(span)
         submit_cell.appendChild(guidelines)
+        span = document.createElement('span')
+        span.innerHTML = '&ensp;'
+        submit_cell.appendChild(span)
+        submit_cell.appendChild(open_wordnet)
+        span = document.createElement('span')
+        span.innerHTML = '&ensp;'
+        submit_cell.appendChild(span)
         submit_cell.appendChild(submit)
         footer_row.appendChild(submit_cell)
 
         // Warning cell
         let footer_row_2 = document.createElement("tr")
-        let warning_cell = document.createElement('td')
-        warning_cell.colSpan = '5'
-        warning_cell.style.paddingTop = `8px`
-        warning_cell.id = 'warnings'
+        this.warning_cell = document.createElement('td')
+        this.warning_cell.colSpan = '5'
+        this.warning_cell.style.paddingTop = `8px`
+        this.warning_cell.style.color = 'red'
 
-        footer_row_2.appendChild(warning_cell)
+        footer_row_2.appendChild(this.warning_cell)
         footer.appendChild(footer_row_2)
 
         // Submit logic
@@ -113,8 +127,17 @@ export class Screen {
         return false
     }
 
+    open_wordnet(word) {
+        window.open(`http://wordnetweb.princeton.edu/perl/webwn?s=${word}`)
+        return false
+    }
+
     submit_annotation() {
         // Extract data
+        if (!this.lemma.is_stable()) {
+            this.warning_cell.innerHTML = 'Cannot submit (info not complete)'
+            return false
+        }
 
         let return_data = {};
 

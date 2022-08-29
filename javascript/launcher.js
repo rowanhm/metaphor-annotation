@@ -9,14 +9,25 @@ class Manager {
 
     }
 
-    async initialise_credentials(){
-
+    async load() {
         this.set_screen_text('Loading...')
-
         this.lemma_queues = await load_json("data/extracted/queues.json")
         this.queue = this.lemma_queues[this.queue_name]
         this.datastore = new Datastore()
         await this.datastore.load()
+    }
+
+    async initialise_custom(user_id, queue_name) {
+        this.queue_name = queue_name
+        this.user_id = user_id
+        await this.load()
+        this.queue = this.lemma_queues[this.queue_name]
+        this.update_queue_and_render()
+    }
+
+    async initialise_credentials(){
+
+        await this.load()
 
         const element = document.getElementById("main");
 
@@ -122,6 +133,7 @@ class Manager {
 
 function start() {
     let rend = new Manager();
+    // rend.initialise_custom('test', 'noun001')
     rend.initialise_credentials()
 }
 

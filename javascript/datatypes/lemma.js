@@ -28,6 +28,16 @@ export class Lemma {
         this.new_sense_id = 0
     }
 
+    is_stable() {
+        let stable = true
+        for (const sense of this.all_senses()) {
+            if (!sense.is_stable()) {
+                stable = false
+            }
+        }
+        return stable
+    }
+
     get_next_new_sense_id() {
         this.new_sense_id += 1
         return this.new_sense_id

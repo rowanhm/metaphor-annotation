@@ -34,4 +34,19 @@ export class GhostLiteralSense extends LiteralSense {
         this.label_selector_cell.innerHTML = 'Literal'
     }
 
+    is_stable() {
+        super.is_stable()
+        const defn = this.definition.get_definition()
+        if (defn.length === 0) {
+            return false
+        }
+        return true
+    }
+
+    get_data() {
+        let sense_data = super.get_data()
+        sense_data['definition'] = this.definition.get_definition()
+        return sense_data
+    }
+
 }

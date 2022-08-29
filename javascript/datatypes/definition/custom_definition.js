@@ -2,18 +2,25 @@ import {make_empty_cell} from "../../utilities.js";
 
 export class CustomDefinition {
 
-    constructor() {
+    constructor(sense) {
+        this.sense = sense
     }
 
     make_definition_cell() {
-        let definition_cell = make_empty_cell()
-        let text_area = document.createElement('textarea')
-        definition_cell.appendChild(text_area)
-        return definition_cell
+        this.definition_cell = make_empty_cell()
+        this.definition = document.createElement('textarea')
+        this.definition_cell.appendChild(this.definition)
+        let that = this
+        this.definition.oninput = function() {
+            that.sense.fill_name_cell()
+        }
+    }
+
+    get_definition() {
+        return this.definition.value
     }
 
     make_image_cell() {
-        let image_cell = make_empty_cell()
-        return image_cell
+        this.image_cell = make_empty_cell()
     }
 }

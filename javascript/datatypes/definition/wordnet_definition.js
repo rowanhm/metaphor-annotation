@@ -8,21 +8,79 @@ export class WordNetDefinition {
         this.concept_id = this.lemma.datastore.senses_to_info[this.original_sense_id]['concept_id']
     }
 
+    copy() {
+        let defn = new WordNetDefinition(this.lemma, this.original_sense_id)
+        defn.make_definition_cell()
+        return defn
+    }
+
     make_definition_cell() {
-        let definition_cell = make_empty_cell()
+        this.definition_cell = make_empty_cell()
         let definition = this.create_definition(this.original_sense_id)
-        definition_cell.appendChild(definition)
-        return definition_cell
+        this.definition_cell.appendChild(definition)
     }
 
     make_image_cell() {
-        let image_cell = make_empty_cell()
+        this.image_cell = make_empty_cell()
         if (this.lemma.datastore.concepts_to_img_flags[this.concept_id]) {
-            image_cell.style.textAlign = 'center'
+            this.image_cell.style.textAlign = 'center'
             const image_file = `data/extracted/images/${this.concept_id}.jpg`
-            image_cell.innerHTML = `<object data="${image_file}" type="image/jpeg"></object>`
+            this.image_cell.innerHTML = `<object data="${image_file}" type="image/jpeg"></object>`
         }
-        return image_cell
+    }
+
+    create_definition(old_sense_id, deep_linked=true) {
+        const sense_info = this.lemma.datastore.senses_to_info[old_sense_id]
+        const concept_id = sense_info['concept_id']
+
+        let definition = document.createElement('p')
+
+        // Add synonyms
+        const synonyms = sense_info['synonyms']
+        if (synonyms.length > 0) {
+            definition.innerHTML += '['
+            for (let i = 0; i < synonyms.length; i++) {
+                const synonym = synonyms[i]
+                const synonym_string = synonym['string']
+                const synonym_sense_id = synonym['sense_id']
+                let italic = document.createElement('i')
+                italic.innerHTML += synonym_string.replaceAll('_', ' ')
+                if (deep_linked) {
+                    definition.appendChild(this.linked_word(`<i>${synonym_string.replaceAll('_', ' ')}</i>`, synonym_sense_id))
+                } else {
+                    definition.appendChild(italic)
+                }
+
+                if (i < synonyms.length - 1) {
+                    definition.innerHTML += ', '
+                }
+            }
+            definition.innerHTML += '] '
+        }
+
+        // Add definition
+        const definition_string = this.lemma.datastore.concepts_to_definitions[concept_id]
+        if (deep_linked) {
+            definition.appendChild(this.hyperlinked_string(definition_string))
+        } else {
+            definition.innerHTML += definition_string['string']
+        }
+
+        // Add examples
+        const examples = sense_info['examples']
+        if (examples.length > 0) {
+            definition.innerHTML += ', e.g. '
+            for (let i = 0; i < examples.length; i++) {
+                const example = examples[i]
+                const example_string = example['string']
+                definition.innerHTML += example_string
+                if (i < examples.length - 1) {
+                    definition.innerHTML += ', '
+                }
+            }
+        }
+
+        return definition
     }
 
     hyperlinked_string(definition_object) {
@@ -58,58 +116,5 @@ export class WordNetDefinition {
         linked_text.appendChild(hover_over)
 
         return linked_text
-    }
-
-    create_definition(old_sense_id, deep_linked=true) {
-        const sense_info = this.lemma.datastore.senses_to_info[old_sense_id]
-
-        let definition = document.createElement('p')
-
-        // Add synonyms
-        const synonyms = sense_info['synonyms']
-        if (synonyms.length > 0) {
-            definition.innerHTML += '['
-            for (let i = 0; i < synonyms.length; i++) {
-                const synonym = synonyms[i]
-                const synonym_string = synonym['string']
-                const synonym_sense_id = synonym['sense_id']
-                let italic = document.createElement('i')
-                italic.innerHTML += synonym_string.replaceAll('_', ' ')
-                if (deep_linked) {
-                    definition.appendChild(this.linked_word(`<i>${synonym_string.replaceAll('_', ' ')}</i>`, synonym_sense_id))
-                } else {
-                    definition.appendChild(italic)
-                }
-
-                if (i < synonyms.length - 1) {
-                    definition.innerHTML += ', '
-                }
-            }
-            definition.innerHTML += '] '
-        }
-
-        // Add definition
-        const definition_string = this.lemma.datastore.concepts_to_definitions[this.concept_id]
-        if (deep_linked) {
-            definition.appendChild(this.hyperlinked_string(definition_string))
-        } else {
-            definition.innerHTML += definition_string['string']
-        }
-
-        // Add examples
-        const examples = sense_info['examples']
-        if (examples.length > 0) {
-            definition.innerHTML += ', e.g. '
-            for (let i = 0; i < examples.length; i++) {
-                const example = examples[i]
-                const example_string = example['string']
-                definition.innerHTML += example_string
-                if (i < examples.length - 1) {
-                    definition.innerHTML += ', '
-                }
-            }
-        }
-
-        return definition
     }
 }

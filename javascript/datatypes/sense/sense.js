@@ -11,22 +11,26 @@ export class Sense {
             this.lemma = sense.lemma
             this.new_sense_id = sense.new_sense_id
             this.name_cell = sense.name_cell
-            this.definition_cell = sense.definition_cell
-            this.image_cell = sense.image_cell
             this.label_selector_cell = sense.label_selector_cell
-            this.info_cell = sense.info_cell
+            this.relation_cell = sense.relation_cell
             this.tool_cell = sense.tool_cell
             this.row = sense.row
             this.definition = sense.definition
             this.backend_sense_id = sense.backend_sense_id
+            this.feature_cell = sense.feature_cell
+            this.definition.sense = this
 
             // Embed
             this.embed_with_removal(sense)
         }
     }
 
+    is_stable() {
+        return false
+    }
+
     get_label() {
-        return 'None'
+        return null
     }
 
     remove() {
@@ -68,7 +72,11 @@ export class Sense {
         this.tool_cell.style.backgroundColor='white'
         this.tool_cell.style.textAlign = 'center'
         this.label_selector_cell = make_empty_cell()
-        this.info_cell = make_empty_cell()
+        this.relation_cell = make_empty_cell()
+        this.feature_cell = make_empty_cell()
+        this.feature_cell.style.textAlign = 'right'
+        this.definition.make_definition_cell()
+        this.definition.make_image_cell()
         this.make_row()
     }
 
@@ -87,7 +95,7 @@ export class Sense {
         this.lemma = lemma
         this.backend_sense_id = `new:${this.lemma.get_next_new_sense_id()}`
         this.new_sense_id = new_sense_id
-        this.definition = new CustomDefinition()
+        this.definition = new CustomDefinition(this)
 
         this.build_cells()
         this.embed(lemma.new_id_order.length)
@@ -104,6 +112,11 @@ export class Sense {
 
     fill_name_cell() {
         this.name_cell.innerHTML = '<b>' + this.get_outward_facing_id() + '</b><br>'
+        if (this.is_stable()) {
+            this.name_cell.style.color = 'green'
+        } else {
+            this.name_cell.style.color = 'red'
+        }
     }
 
     fill_tool_cell() {
@@ -148,18 +161,21 @@ export class Sense {
         }
     }
 
-    fill_info_cell() {
-        this.info_cell.innerHTML = ''
+    fill_relation_cell() {
+        this.relation_cell.innerHTML = ''
+    }
+
+    fill_features_cell() {
+        this.feature_cell.innerHTML = ''
     }
 
     make_row() {
         // Fill all cells
         this.fill_name_cell()
-        this.make_definition_cell()
-        this.make_image_cell()
         this.fill_name_cell()
         this.fill_label_cell()
-        this.fill_info_cell()
+        this.fill_relation_cell()
+        this.fill_features_cell()
         this.fill_tool_cell()
 
         // Attach all cells
@@ -171,10 +187,11 @@ export class Sense {
     fill_row() {
         this.row.innerHTML = ''
         this.row.appendChild(this.name_cell)
-        this.row.appendChild(this.definition_cell)
-        this.row.appendChild(this.image_cell)
+        this.row.appendChild(this.definition.definition_cell)
+        this.row.appendChild(this.definition.image_cell)
         this.row.appendChild(this.label_selector_cell)
-        this.row.appendChild(this.info_cell)
+        this.row.appendChild(this.relation_cell)
+        this.row.appendChild(this.feature_cell)
         this.row.appendChild(this.tool_cell)
     }
 
