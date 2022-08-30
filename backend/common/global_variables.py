@@ -32,7 +32,7 @@ image_dir = extracted_data_dir + 'images/'
 # Parameters
 QUEUE_LENGTH = 100
 MIN_SENSES = 2
-MAX_SENSES = 10
+MAX_SENSES = 8
 
 pos_map = {
     'v': 'verb',

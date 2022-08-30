@@ -30,12 +30,13 @@ excluded_derivation = 0
 
 for lemma_id, senses in lemma_to_senses.items():
     word, pos, ind = lemma_id.split(':')
+    num_senses = len(senses)
 
     if word not in WORD_LIST:
         excluded_word_list += 1
         continue
 
-    if not (MIN_SENSES <= len(senses) <= MAX_SENSES):
+    if not (MIN_SENSES <= num_senses <= MAX_SENSES):
         excluded_sense_count += 1
         continue
 
@@ -72,17 +73,18 @@ for lemma_id, senses in lemma_to_senses.items():
             break
 
     if not skip:
-        lemmas_matching_criteria.add(lemma_id)
+        lemmas_matching_criteria.add((lemma_id, num_senses))
     else:
         excluded_derivation += 1
 
-info(f'{len(lemmas_matching_criteria)} lemmas match criteria (skippages: {excluded_word_list} as missing from whitelist; {excluded_sense_count} for wrong number of senses; {excluded_word_length} for too short form; {excluded_derivation} because of derivation)')
+info(
+    f'{len(lemmas_matching_criteria)} lemmas match criteria (skippages: {excluded_word_list} as missing from whitelist; {excluded_sense_count} for wrong number of senses; {excluded_word_length} for too short form; {excluded_derivation} because of derivation)')
 
 info('Splitting by POS')
 pos_dict = defaultdict(set)
-for lemma_id in lemmas_matching_criteria:
+for (lemma_id, num_senses) in lemmas_matching_criteria:
     pos = lemma_id.split(':')[1]
-    pos_dict[pos].add(lemma_id)
+    pos_dict[pos].add((lemma_id, num_senses))
 
 info(f'POS breakdown: {[(pos, len(lemmas)) for pos, lemmas in pos_dict.items()]}')
 
@@ -98,7 +100,8 @@ for pos, pos_lemmas in pos_dict.items():
         queue_code = f"{pos}{index:03d}"
         assert queue_code not in queue_dict.keys()
 
-        queue = lemmas_remaining[:QUEUE_LENGTH]
+        queue = sorted(lemmas_remaining[:QUEUE_LENGTH], key=lambda x: x[1])
+        queue = [lemma_id for (lemma_id, num_senses) in queue]  # Strip the num of senses
         queue_dict[queue_code] = queue
 
         lemmas_remaining = lemmas_remaining[QUEUE_LENGTH:]
