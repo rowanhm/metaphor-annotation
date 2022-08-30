@@ -19,11 +19,21 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 export function save_lemma(user_id, queue_id, lemma_id, lemma_data) {
-    let promise = set(ref(database, `${user_id}/${queue_id}/${lemma_id}`), lemma_data);
+    let promise = set(ref(database, `${user_id}/queues/${queue_id}/${lemma_id}`), lemma_data);
     return promise
 }
 
 export function load_queue(user_id, queue_id) {
-    let promise = get(child(ref(database), `${user_id}/${queue_id}`))
+    let promise = get(child(ref(database), `${user_id}/queues/${queue_id}`))
+    return promise
+}
+
+export function load_features(user_id) {
+    let promise = get(child(ref(database), `${user_id}/features`))
+    return promise
+}
+
+export function save_features(user_id, feature_frequencies) {
+    let promise = set(ref(database, `${user_id}/features`), feature_frequencies);
     return promise
 }

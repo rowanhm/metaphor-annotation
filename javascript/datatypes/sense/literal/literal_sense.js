@@ -1,4 +1,5 @@
 import {Sense} from "../sense.js";
+import {autocomplete} from "../../../autocompletion.js";
 
 export class LiteralSense extends Sense {
 
@@ -28,6 +29,7 @@ export class LiteralSense extends Sense {
         this.features_index++
         this.insane = true
         this.lemma.refresh()
+        autocomplete(new_feature, this.lemma.datastore.feature_list)
     }
 
     delete_feature(feature_id) {
@@ -176,7 +178,10 @@ export class LiteralSense extends Sense {
             row.appendChild(feature_cell)
             let no_break = document.createElement('nobr')
             no_break.innerHTML = 'This thing '
-            no_break.appendChild(feature_input)
+            let new_feature_wrapper = document.createElement('div')
+            new_feature_wrapper.className = 'autocomplete'
+            new_feature_wrapper.appendChild(feature_input)
+            no_break.appendChild(new_feature_wrapper)
             feature_cell.appendChild(no_break)
 
             let delete_cell = document.createElement('td')
@@ -219,5 +224,14 @@ export class LiteralSense extends Sense {
             return true
         }
         return false
+    }
+
+    get_feature_list() {
+        this.sanify()
+        let features = []
+        for (const [feature_id, feature_input] of Object.entries(this.features_inputs)) {
+            features.push(feature_input.value)
+        }
+        return features
     }
 }

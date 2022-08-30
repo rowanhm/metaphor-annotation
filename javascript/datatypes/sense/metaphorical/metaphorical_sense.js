@@ -1,5 +1,6 @@
 import {Sense} from "../sense.js";
 import {LiteralSense} from "../literal/literal_sense.js";
+import {autocomplete} from "../../../autocompletion.js";
 
 export class MetaphoricalSense extends Sense {
 
@@ -114,6 +115,7 @@ export class MetaphoricalSense extends Sense {
                                 let feature_transformation_input = document.createElement('input')
                                 feature_transformation_input.type = 'text'
                                 feature_transformation_input.value = this.lemma.get_sense(this.resembles).get_feature(feature_id)
+                                autocomplete(feature_transformation_input, this.lemma.datastore.feature_list)
                                 this.feature_transformation_inputs[feature_id] = feature_transformation_input
                             }
                         }
@@ -264,7 +266,11 @@ export class MetaphoricalSense extends Sense {
                         modification_cell.appendChild(no_break)
                         no_break.innerHTML = '=> This thing '
 
-                        no_break.appendChild(this.get_transformation_input(feature_id))
+                        let feature_transformation_wrapper = document.createElement('div')
+                        feature_transformation_wrapper.className = 'autocomplete'
+                        feature_transformation_wrapper.appendChild(this.get_transformation_input(feature_id))
+
+                        no_break.appendChild(feature_transformation_wrapper)
                     }
                 }
             }
@@ -308,4 +314,12 @@ export class MetaphoricalSense extends Sense {
         return false
     }
 
+    get_feature_list() {
+        this.sanify()
+        let features = []
+        for (const [feature_id, feature_input] of Object.entries(this.feature_transformation_inputs)) {
+            features.push(feature_input.value)
+        }
+        return features
+    }
 }

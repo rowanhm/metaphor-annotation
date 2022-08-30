@@ -146,4 +146,30 @@ export class Lemma {
         this.refresh()
     }
 
+    get_data() {
+        let return_data = {};
+
+        for (const sense of this.all_senses()) {
+            const sense_id = sense.backend_sense_id
+            let sense_data = sense.get_data()
+            if (sense_id in return_data) {
+                // Add the additional data
+                for (const [key, value] of Object.entries(sense_data)) {
+                    return_data[sense_id][key] = value
+                }
+            } else {
+                return_data[sense_id] = sense_data
+            }
+        }
+
+        return return_data
+    }
+
+    get_feature_list() {
+        let features = []
+        for (const sense of this.all_senses()) {
+            features = features.concat(sense.get_feature_list())
+        }
+        return features
+    }
 }

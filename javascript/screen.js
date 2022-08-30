@@ -1,5 +1,5 @@
 import {Lemma} from "./datatypes/lemma.js";
-import {save_lemma} from "./io.js";
+import {save_features, save_lemma} from "./io.js";
 import {make_empty_cell} from "./utilities.js";
 
 export class Screen {
@@ -14,6 +14,7 @@ export class Screen {
         console.log(`Creating form and table title`)
         const element = document.getElementById("main");
         let form = document.createElement("form");
+        form.autocomplete = 'off'
         form.id = "form"
 
         let table = document.createElement("table");
@@ -139,22 +140,24 @@ export class Screen {
             return false
         }
 
-        let return_data = {};
-
-        for (const sense of this.lemma.all_senses()) {
-            const sense_id = sense.backend_sense_id
-            let sense_data = sense.get_data()
-            if (sense_id in return_data) {
-                // Add the additional data
-                for (const [key, value] of Object.entries(sense_data)) {
-                    return_data[sense_id][key] = value
-                }
-            } else {
-                return_data[sense_id] = sense_data
-            }
-        }
+        const return_data = this.lemma.get_data()
 
         save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data).then(() => {
+
+            // Extract features
+            let feature_frequencies = this.manager.datastore.feature_frequencies
+            const lemma_features = this.lemma.get_feature_list()
+
+            for (const feature of lemma_features) {
+                if (feature in feature_frequencies) {
+                    feature_frequencies[feature] += 1
+                } else {
+                    feature_frequencies[feature] = 1
+                }
+            }
+
+            save_features(this.manager.user_id, feature_frequencies)
+
             // Next word
             this.manager.update_queue_and_render()
         })

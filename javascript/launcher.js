@@ -1,4 +1,4 @@
-import {load_json, load_queue} from "./io.js";
+import {load_queue} from "./io.js";
 import {Datastore} from "./datastore.js";
 import {Screen} from "./screen.js"
 
@@ -11,8 +11,6 @@ class Manager {
 
     async load() {
         this.set_screen_text('Loading...')
-        this.lemma_queues = await load_json("data/extracted/queues.json")
-        this.queue = this.lemma_queues[this.queue_name]
         this.datastore = new Datastore()
         await this.datastore.load()
     }
@@ -21,7 +19,7 @@ class Manager {
         this.queue_name = queue_name
         this.user_id = user_id
         await this.load()
-        this.queue = this.lemma_queues[this.queue_name]
+        this.queue = this.datastore.lemma_queues[this.queue_name]
         this.update_queue_and_render()
     }
 
@@ -81,12 +79,12 @@ class Manager {
             return false
         }
 
-        if (!(this.queue_name in this.lemma_queues)) {
+        if (!(this.queue_name in this.datastore.lemma_queues)) {
             warnings.innerHTML = 'Invalid queue ID.'
             return false
         }
 
-        this.queue = this.lemma_queues[this.queue_name]
+        this.queue = this.datastore.lemma_queues[this.queue_name]
         this.update_queue_and_render()
         return false
     }
@@ -116,11 +114,18 @@ class Manager {
                 this.queue_index = 0
             }
             if (found) {
-                this.render()
+                this.update_feature_list().then(() => {
+                    this.render()
+                })
             } else {
                 this.set_screen_text('Thank you for participating.')
             }
         })
+    }
+
+    async update_feature_list() {
+        this.set_screen_text('Refreshing feature list...')
+        await this.datastore.refresh_feature_list(this.user_id)
     }
 
     render() {
@@ -133,8 +138,8 @@ class Manager {
 
 function start() {
     let rend = new Manager();
-    // rend.initialise_custom('test', 'noun001')
-    rend.initialise_credentials()
+    rend.initialise_custom('test', 'noun001')
+    //rend.initialise_credentials()
 }
 
 window.start = start;
