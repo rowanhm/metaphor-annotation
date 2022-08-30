@@ -1,15 +1,19 @@
 import {Lemma} from "./datatypes/lemma.js";
-import {save_features, save_lemma} from "./io.js";
+import {save_features, save_lemma, save_logs} from "./io.js";
 import {make_empty_cell} from "./utilities.js";
+import {Logs} from "./logs.js";
 
 export class Screen {
 
     constructor(lemma_name, manager) {
+        this.logs = new Logs()
+
         let that = this
+
         this.manager = manager
 
         console.log(`Initialising lemma ${lemma_name}`)
-        this.lemma = new Lemma(lemma_name, this.manager.datastore)
+        this.lemma = new Lemma(lemma_name, this.manager.datastore, this)
 
         console.log(`Creating form and table title`)
         const element = document.getElementById("main");
@@ -73,17 +77,29 @@ export class Screen {
         submit_cell.style.textAlign = 'right'
         let submit = document.createElement("input");
         submit.type = "submit"
+
         let guidelines = document.createElement("button")
         guidelines.type = 'button'
-        guidelines.onclick = function () { that.open_guidelines() }
+        guidelines.onclick = function () {
+            that.lemma.screen.logs.log('open_guidelines', '', '')
+            that.open_guidelines()
+        }
         guidelines.innerHTML = 'See Guidelines'
+
         let new_sense = document.createElement("button")
         new_sense.type = 'button'
-        new_sense.onclick = function () { that.lemma.new_ghost_sense() }
+        new_sense.onclick = function () {
+            that.lemma.screen.logs.log('new_ghost_sense', '', '')
+            that.lemma.new_ghost_sense()
+        }
         new_sense.innerHTML = 'New ghost sense'
+
         let open_wordnet = document.createElement("button")
         open_wordnet.type = 'button'
-        open_wordnet.onclick = function () { that.open_wordnet(that.lemma.word) }
+        open_wordnet.onclick = function () {
+            that.lemma.screen.logs.log('open_in_wordnet', '', '')
+            that.open_wordnet(that.lemma.word)
+        }
         open_wordnet.innerHTML = 'Open in WordNet'
 
         submit_cell.appendChild(new_sense)
@@ -112,7 +128,10 @@ export class Screen {
         footer.appendChild(footer_row_2)
 
         // Submit logic
-        form.onsubmit = function() { return that.submit_annotation() }
+        form.onsubmit = function() {
+            that.lemma.screen.logs.log('submit', '', '')
+            return that.submit_annotation()
+        }
 
         // Add
         element.innerHTML = '' // Remove loading screen
@@ -134,6 +153,7 @@ export class Screen {
     }
 
     submit_annotation() {
+
         // Extract data
         if (!this.lemma.is_stable()) {
             this.warning_cell.innerHTML = 'Cannot submit (info not complete)'
@@ -141,7 +161,6 @@ export class Screen {
         }
 
         const return_data = this.lemma.get_data()
-
         save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data).then(() => {
 
             // Extract features
@@ -156,10 +175,12 @@ export class Screen {
                 }
             }
 
-            save_features(this.manager.user_id, feature_frequencies)
-
-            // Next word
-            this.manager.update_queue_and_render()
+            save_features(this.manager.user_id, feature_frequencies).then(() => {
+                save_logs(this.manager.user_id, this.logs.get_data(), this.lemma.lemma_name).then(() => {
+                    // Next word
+                    this.manager.update_queue_and_render()
+                })
+            })
         })
 
         return false

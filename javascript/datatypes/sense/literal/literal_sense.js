@@ -1,5 +1,6 @@
 import {Sense} from "../sense.js";
 import {autocomplete} from "../../../autocompletion.js";
+import {is_valid_feature} from "../../../utilities.js";
 
 export class LiteralSense extends Sense {
 
@@ -35,6 +36,9 @@ export class LiteralSense extends Sense {
     delete_feature(feature_id) {
         delete this.features_inputs[feature_id]
         this.insane = true
+        for (const sense of this.lemma.metaphorical_senses()) {
+            sense.insane = true
+        }
         this.lemma.refresh()
     }
 
@@ -93,6 +97,7 @@ export class LiteralSense extends Sense {
         select_group.id = `${this.new_sense_id}:group_select`
         let that = this
         select_group.onchange = function(){
+            that.lemma.screen.logs.log('set_group', that.backend_sense_id, `group_${document.getElementById(`${that.new_sense_id}:group_select`).value}`)
             that.update_group()
         }
 
@@ -188,7 +193,10 @@ export class LiteralSense extends Sense {
             row.appendChild(delete_cell)
             let delete_button = document.createElement("button")
             delete_button.type = 'button'
-            delete_button.onclick = function () { that.delete_feature(feature_id) }
+            delete_button.onclick = function () {
+                that.lemma.screen.logs.log('delete_feature', that.backend_sense_id, `feature_${feature_id}`)
+                that.delete_feature(feature_id)
+            }
             delete_button.innerHTML = 'Delete'
             delete_cell.appendChild(delete_button)
             delete_cell.style.textAlign = 'right'
@@ -203,7 +211,10 @@ export class LiteralSense extends Sense {
         add_cell.style.textAlign = 'right'
         let create_button = document.createElement("button")
         create_button.type = 'button'
-        create_button.onclick = function () { that.add_feature() }
+        create_button.onclick = function () {
+            that.lemma.screen.logs.log('new_feature', that.backend_sense_id, '')
+            that.add_feature()
+        }
         create_button.innerHTML = 'Add'
         add_row.appendChild(add_cell)
         add_cell.appendChild(create_button)
@@ -217,13 +228,19 @@ export class LiteralSense extends Sense {
         for (const metaphorical_sense of this.lemma.metaphorical_senses()) {
             metaphorical_sense.fill_features_cell()
         }
+        this.fill_name_cell()
     }
 
     is_stable() {
-        if (this.get_group() !== null) {
-            return true
+        if (this.get_group() === null) {
+            return false
         }
-        return false
+        for (const feature of this.get_feature_list()) {
+            if (!(is_valid_feature(feature))) {
+                return false
+            }
+        }
+        return true
     }
 
     get_feature_list() {

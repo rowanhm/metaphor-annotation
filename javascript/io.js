@@ -37,3 +37,8 @@ export function save_features(user_id, feature_frequencies) {
     let promise = set(ref(database, `${user_id}/features`), feature_frequencies);
     return promise
 }
+
+export function save_logs(user_id, logs, lemma_id) {
+    let promise = set(ref(database, `${user_id}/logs/${lemma_id}`), logs);
+    return promise
+}

@@ -124,7 +124,10 @@ export class Sense {
         this.tool_cell.innerHTML = ''
         let split_button = document.createElement("button")
         split_button.type = 'button'
-        split_button.onclick = function () { that.lemma.split_mixed_sense(that.new_sense_id) }
+        split_button.onclick = function () {
+            that.lemma.screen.logs.log(`split`, that.backend_sense_id, ``)
+            that.lemma.split_mixed_sense(that.new_sense_id)
+        }
         split_button.innerHTML = 'Split'
         this.tool_cell.appendChild(split_button)
     }
@@ -142,6 +145,7 @@ export class Sense {
             input.name = select_name
             input.id = name
             input.onclick = function () {
+                that.lemma.screen.logs.log(option.toLowerCase(), that.backend_sense_id, '')
                 that.lemma.set_label(that.new_sense_id, option.toLowerCase())
             }
             no_break.appendChild(input)

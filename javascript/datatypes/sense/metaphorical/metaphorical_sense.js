@@ -1,6 +1,7 @@
 import {Sense} from "../sense.js";
 import {LiteralSense} from "../literal/literal_sense.js";
 import {autocomplete} from "../../../autocompletion.js";
+import {is_valid_feature} from "../../../utilities.js";
 
 export class MetaphoricalSense extends Sense {
 
@@ -96,6 +97,7 @@ export class MetaphoricalSense extends Sense {
 
                 // Remove feature_labels for features not in literal parent
                 // Remove feature_transformations for features not in literal parent
+                let that = this
                 for (const [feature_id, feature_label] of Object.entries(this.feature_labels)) {
                     if (!(found_features.has(feature_id))) {
                         delete this.feature_labels[feature_id]
@@ -113,6 +115,9 @@ export class MetaphoricalSense extends Sense {
                                 // Add the transformation
                                 // If it is transformed, initialise the value with the same text
                                 let feature_transformation_input = document.createElement('input')
+                                feature_transformation_input.oninput = function() {
+                                    that.fill_name_cell()
+                                }
                                 feature_transformation_input.type = 'text'
                                 feature_transformation_input.value = this.lemma.get_sense(this.resembles).get_feature(feature_id)
                                 autocomplete(feature_transformation_input, this.lemma.datastore.feature_list)
@@ -145,6 +150,7 @@ export class MetaphoricalSense extends Sense {
         select_resemblance.id = `${this.new_sense_id}:resemblance_select`
         let that = this
         select_resemblance.onchange = function(){
+            that.lemma.screen.logs.log('set_resembles', that.backend_sense_id, that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).backend_sense_id)
             that.update_resembles()
         }
 
@@ -235,6 +241,7 @@ export class MetaphoricalSense extends Sense {
                         input.name = radio_name
                         input.id = name
                         input.onclick = function () {
+                            that.lemma.screen.logs.log(`label_feature(${option.toLowerCase()})`, that.backend_sense_id, `feature_${feature_id}`)
                             that.set_feature_label(feature_id, option.toLowerCase())
                         }
                         option_list.appendChild(input)
@@ -303,6 +310,11 @@ export class MetaphoricalSense extends Sense {
                 found_pos_feature = true
             } else if (feature_label === 'modified' || feature_label === 'no') {
                 found_neg_feature = true
+                if (feature_label === 'modified') {
+                    if (!(is_valid_feature(this.get_transformation_input(feature_id).value))) {
+                        return false
+                    }
+                }
             } else {
                 // feature is null
                 return false

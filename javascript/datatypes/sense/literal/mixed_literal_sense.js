@@ -38,7 +38,10 @@ export class MixedLiteralSense extends LiteralSense {
 
         let remerge_button = document.createElement("button")
         remerge_button.type = 'button'
-        remerge_button.onclick = function () { that.lemma.merge_mixed_sense(that.new_sense_id) }
+        remerge_button.onclick = function () {
+            that.lemma.screen.logs.log(`remerge`, that.backend_sense_id, ``)
+            that.lemma.merge_mixed_sense(that.new_sense_id)
+        }
         remerge_button.innerHTML = '<nobr>Re-merge</nobr>'
         this.tool_cell.appendChild(remerge_button)
     }

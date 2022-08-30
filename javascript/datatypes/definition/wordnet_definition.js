@@ -29,16 +29,22 @@ export class WordNetDefinition {
         }
     }
 
+    span_from_text(text) {
+        let inner_span = document.createElement("span");
+        inner_span.innerHTML = text
+        return inner_span
+    }
+
     create_definition(old_sense_id, deep_linked=true) {
         const sense_info = this.lemma.datastore.senses_to_info[old_sense_id]
         const concept_id = sense_info['concept_id']
 
-        let definition = document.createElement('p')
+        let definition = document.createElement('span')
 
         // Add synonyms
         const synonyms = sense_info['synonyms']
         if (synonyms.length > 0) {
-            definition.innerHTML += '['
+            definition.appendChild(this.span_from_text('['))
             for (let i = 0; i < synonyms.length; i++) {
                 const synonym = synonyms[i]
                 const synonym_string = synonym['string']
@@ -52,10 +58,10 @@ export class WordNetDefinition {
                 }
 
                 if (i < synonyms.length - 1) {
-                    definition.innerHTML += ', '
+                    definition.appendChild(this.span_from_text(', '))
                 }
             }
-            definition.innerHTML += '] '
+            definition.appendChild(this.span_from_text('] '))
         }
 
         // Add definition
@@ -63,22 +69,24 @@ export class WordNetDefinition {
         if (deep_linked) {
             definition.appendChild(this.hyperlinked_string(definition_string))
         } else {
-            definition.innerHTML += definition_string['string']
+            definition.appendChild(this.span_from_text(definition_string['string']))
         }
 
         // Add examples
         const examples = sense_info['examples']
+        let example_text = ''
         if (examples.length > 0) {
-            definition.innerHTML += ', e.g. '
+            example_text += ', e.g. '
             for (let i = 0; i < examples.length; i++) {
                 const example = examples[i]
                 const example_string = example['string']
-                definition.innerHTML += example_string
+                example_text += example_string
                 if (i < examples.length - 1) {
-                    definition.innerHTML += ', '
+                    example_text += ', '
                 }
             }
         }
+        definition.appendChild(this.span_from_text(example_text))
 
         return definition
     }
@@ -95,20 +103,20 @@ export class WordNetDefinition {
             const sense_id = annotation[2]
 
             // Add text between this annotation and the last
-            definition.innerHTML += string.slice(old_end_index, start_index)
+            definition.appendChild(this.span_from_text(string.slice(old_end_index, start_index)))
 
             definition.appendChild(this.linked_word(string.slice(start_index, end_index), sense_id))
 
             old_end_index = end_index
         }
-        definition.innerHTML += string.slice(old_end_index, string.length)
+        definition.appendChild(this.span_from_text(string.slice(old_end_index, string.length)))
         return definition
     }
 
     linked_word(text_string, old_sense_id) {
         let linked_text = document.createElement("span");
-        linked_text.innerHTML = text_string
         linked_text.classList.add('tooltip')
+        linked_text.innerHTML = text_string
 
         // add hover
         let hover_over = this.create_definition(old_sense_id, false)

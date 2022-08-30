@@ -6,7 +6,7 @@ import {GhostLiteralSense} from "./sense/literal/ghost_literal_sense.js";
 
 export class Lemma {
 
-    constructor(lemma_name, datastore) {
+    constructor(lemma_name, datastore, screen) {
         this.lemma_name = lemma_name
         this.datastore = datastore
 
@@ -26,6 +26,9 @@ export class Lemma {
         this.next_available_index = i
 
         this.new_sense_id = 0
+
+        this.screen = screen
+        this.screen.logs.log('lemma_initialised', '', '')
     }
 
     is_stable() {

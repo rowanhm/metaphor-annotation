@@ -25,7 +25,10 @@ export class GhostLiteralSense extends LiteralSense {
 
         let delete_button = document.createElement("button")
         delete_button.type = 'button'
-        delete_button.onclick = function () { that.lemma.delete_ghost_sense(that.new_sense_id) }
+        delete_button.onclick = function () {
+            that.lemma.screen.logs.log(`delete_ghost_sense`, that.backend_sense_id, ``)
+            that.lemma.delete_ghost_sense(that.new_sense_id)
+        }
         delete_button.innerHTML = 'Delete'
         this.tool_cell.appendChild(delete_button)
     }
