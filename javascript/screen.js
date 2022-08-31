@@ -120,7 +120,7 @@ export class Screen {
         // Warning cell
         let footer_row_2 = document.createElement("tr")
         this.warning_cell = document.createElement('td')
-        this.warning_cell.colSpan = '5'
+        this.warning_cell.colSpan = '7'
         this.warning_cell.style.paddingTop = `8px`
         this.warning_cell.style.color = 'red'
 
@@ -156,7 +156,15 @@ export class Screen {
 
         // Extract data
         if (!this.lemma.is_stable()) {
-            this.warning_cell.innerHTML = 'Cannot submit (info not complete)'
+            this.warning_cell.innerHTML = 'Cannot submit (info not complete). Senses which are missing info have their IDs in red (left column). Please make sure:<br>'
+            this.warning_cell.innerHTML += '* All senses are labelled metaphorical or literal<br>'
+            this.warning_cell.innerHTML += '* All literal senses are in a group<br>'
+            this.warning_cell.innerHTML += '* All metaphorical senses are set to resemble a literal sense<br>'
+            this.warning_cell.innerHTML += '* All metaphorical senses have at least one feature in common with this literal sense<br>'
+            this.warning_cell.innerHTML += "* All metaphorical senses have at least one of the literal sense's features missing or modified<br>"
+            this.warning_cell.innerHTML += "* No sense features are blank<br>"
+            this.warning_cell.innerHTML += "* No sense features contain illegal characters ('.', '/', '#', '$', '[', ']')<br>"
+            this.warning_cell.innerHTML += '* All ghost sense have a definition'
             return false
         }
 

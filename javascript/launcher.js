@@ -138,8 +138,8 @@ class Manager {
 
 function start() {
     let rend = new Manager();
-    rend.initialise_custom('test', 'noun001')
-    //rend.initialise_credentials()
+    //rend.initialise_custom('test', 'noun001')
+    rend.initialise_credentials()
 }
 
 window.start = start;
