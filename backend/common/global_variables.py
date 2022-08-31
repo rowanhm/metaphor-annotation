@@ -30,7 +30,7 @@ queues_js_file = extracted_data_dir + 'queues.json'
 image_dir = extracted_data_dir + 'images/'
 
 # Parameters
-QUEUE_LENGTH = 100
+QUEUE_LENGTH = 20
 MIN_SENSES = 2
 MAX_SENSES = 8
 
