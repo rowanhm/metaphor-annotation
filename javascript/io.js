@@ -12,7 +12,9 @@ export async function load_json(file) {
 
 const firebaseConfig = {
     databaseURL: "https://metaphor-annotation-default-rtdb.firebaseio.com",
+    apiKey: 'AIzaSyDkBXRJR3LdBXY7oVS8JP5vT8dsYywAHJk'
 };
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Initialize Realtime Database and get a reference to the service

@@ -1,3 +1,5 @@
+import {getAuth, signInWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/9.9.0/firebase-auth.js";
+
 import {load_queue} from "./io.js";
 import {Datastore} from "./datastore.js";
 import {Screen} from "./screen.js"
@@ -15,17 +17,31 @@ class Manager {
         await this.datastore.load()
     }
 
-    async initialise_custom(user_id, queue_name) {
-        this.queue_name = queue_name
-        this.user_id = user_id
-        await this.load()
-        this.queue = this.datastore.lemma_queues[this.queue_name]
-        this.update_queue_and_render()
+    async login(email, passcode, queue_id) {
+        this.set_screen_text('Logging in...')
+        const auth = getAuth();
+        signInWithEmailAndPassword(auth, email, passcode)
+            .then(async (userCredential) => {
+                console.log('Successful login')
+                // Signed in
+                await this.load()
+                this.user_id = userCredential.user.uid
+                this.queue_name = queue_id
+
+                if (!(this.queue_name in this.datastore.lemma_queues)) {
+                    this.set_screen_text('Invalid queue ID. Refresh to retry.')
+                }
+
+                this.queue = this.datastore.lemma_queues[this.queue_name]
+                this.update_queue_and_render()
+            })
+            .catch((error) => {
+                console.error(error)
+                this.set_screen_text('Failed login. Refresh to retry.')
+            });
     }
 
-    async initialise_credentials(){
-
-        await this.load()
+    async login_screen(){
 
         const element = document.getElementById("main");
 
@@ -35,12 +51,20 @@ class Manager {
         form.id = "form"
 
         // User ID
-        form.innerHTML += 'User ID: '
+        form.innerHTML += 'Email: '
         let name = document.createElement('input')
         name.id = 'user_id'
         name.name = 'user_id'
         name.type = 'text'
         form.appendChild(name)
+
+        // User ID
+        form.innerHTML += '<br>Passcode: '
+        let passcode = document.createElement('input')
+        passcode.id = 'passcode'
+        passcode.name = 'passcode'
+        passcode.type = 'password'
+        form.appendChild(passcode)
 
         // Queue
         form.innerHTML += '<br>Queue ID: '
@@ -70,22 +94,11 @@ class Manager {
 
     submit_credentials() {
         // Sanity check
-        const warnings = document.getElementById(`warnings`)
-        this.user_id = document.getElementById(`user_id`).value
-        this.queue_name = document.getElementById(`queue_id`).value
+        const user_id = document.getElementById(`user_id`).value
+        const passcode = document.getElementById(`passcode`).value
+        const queue_name = document.getElementById(`queue_id`).value
 
-        if (this.user_id === "") {
-            warnings.innerHTML = 'User ID cannot be empty.'
-            return false
-        }
-
-        if (!(this.queue_name in this.datastore.lemma_queues)) {
-            warnings.innerHTML = 'Invalid queue ID.'
-            return false
-        }
-
-        this.queue = this.datastore.lemma_queues[this.queue_name]
-        this.update_queue_and_render()
+        this.login(user_id, passcode, queue_name)
         return false
     }
 
@@ -138,8 +151,7 @@ class Manager {
 
 function start() {
     let rend = new Manager();
-    //rend.initialise_custom('test', 'noun001')
-    rend.initialise_credentials()
+    rend.login_screen()
 }
 
 window.start = start;
