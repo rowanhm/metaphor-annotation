@@ -305,25 +305,30 @@ export class MetaphoricalSense extends Sense {
         }
         let found_neg_feature = false
         let found_pos_feature = false
+        let found_modified_feature = false
         for (const [feature_id, feature_label] of Object.entries(this.get_feature_labels())) {
             if (feature_label === 'yes') {
                 found_pos_feature = true
-            } else if (feature_label === 'modified' || feature_label === 'no') {
+            } else if (feature_label === 'no') {
                 found_neg_feature = true
-                if (feature_label === 'modified') {
-                    if (!(is_valid_feature(this.get_transformation_input(feature_id).value))) {
-                        return false
-                    }
+            } else if (feature_label === 'modified') {
+                if (!(is_valid_feature(this.get_transformation_input(feature_id).value))) {
+                    return false
                 }
+                if (this.get_transformation_input(feature_id).value === this.lemma.get_sense(this.get_resembles()).get_feature(feature_id)) {
+                    return false
+                }
+                found_modified_feature = true
             } else {
                 // feature is null
                 return false
             }
         }
-        if (found_neg_feature && found_pos_feature) {
+        if ((found_neg_feature && found_pos_feature) || found_modified_feature) {
             return true
+        } else {
+            return false
         }
-        return false
     }
 
     get_feature_list() {

@@ -25,6 +25,11 @@ export class LiteralSense extends Sense {
         let that = this
         new_feature.oninput = function () {
             that.refresh_text()
+            for (const metaphor of that.lemma.metaphorical_senses()) {
+                if (metaphor.get_resembles() === that.new_sense_id) {
+                    metaphor.fill_name_cell()
+                }
+            }
         }
         this.features_inputs[this.features_index] = new_feature
         this.features_index++

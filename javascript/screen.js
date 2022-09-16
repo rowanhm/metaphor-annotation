@@ -201,8 +201,7 @@ export class Screen {
             this.warning_cell.innerHTML += '* All senses are labelled metaphorical or literal<br>'
             this.warning_cell.innerHTML += '* All literal senses are in a group<br>'
             this.warning_cell.innerHTML += '* All metaphorical senses are set to resemble a literal sense<br>'
-            this.warning_cell.innerHTML += '* All metaphorical senses have at least one feature in common with this literal sense<br>'
-            this.warning_cell.innerHTML += "* All metaphorical senses have at least one of the literal sense's features missing or modified<br>"
+            this.warning_cell.innerHTML += '* All metaphorical senses have a feature transformation<br>'
             this.warning_cell.innerHTML += "* No sense features are blank<br>"
             this.warning_cell.innerHTML += "* No sense features contain illegal characters ('.', '/', '#', '$', '[', ']')<br>"
             this.warning_cell.innerHTML += '* All ghost sense have a definition<br>'
