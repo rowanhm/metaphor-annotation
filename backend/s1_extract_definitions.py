@@ -11,6 +11,8 @@ from backend.common.common import info, warn, flatten, save_pickle
 from backend.common.global_variables import raw_data_dir, example_sentences_file_princeton, concepts_to_definitions_py_file
 from backend.data_structures import AnnotatedString
 
+assert wn.get_version() == '3.0'
+
 alphabet = set(list(string.ascii_uppercase+string.ascii_lowercase))
 
 

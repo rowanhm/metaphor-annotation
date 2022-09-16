@@ -1,43 +1,118 @@
 from collections import defaultdict
 from nltk.corpus import wordnet as wn
 
-from backend.common.common import open_dict_csv, info, save_pickle, safe_lemma_from_key
-from backend.common.global_variables import raw_data_dir, lemmas_to_senses_py_file, related_lemmas_file, pos_map
+from backend.common.common import info, save_pickle, safe_lemma_from_key, read_text
+from backend.common.global_variables import lemmas_to_senses_py_file, related_lemmas_file, pos_map, \
+    whitelist_vocab_file, MIN_SENSES, MAX_SENSES
 
-lemma_assignments = open_dict_csv(raw_data_dir + 'between_pos_clusters.csv')
+assert wn.get_version() == '3.0'
 
 info('Extracting')
 related_lemmas = defaultdict(set)  # word/index -> pos
 lemmas_to_senses = defaultdict(set)
-for lemma_assignment in lemma_assignments:
-    sense_id = lemma_assignment['wn_sense']
-    lemma_id = lemma_assignment['lemma']
+for synset in wn.all_synsets():
+    pos = pos_map[synset.pos()]
 
-    # Recover POS and re-index
-    assert lemma_id.count('.') == 1
-    assert lemma_id.count(':') == 0
-    word, index = lemma_id.split('.')
-    pos = pos_map[safe_lemma_from_key(word, sense_id).synset().pos()]
+    for word in synset.lemmas():
+        sense_id = word.key()
+        wordform = word.name()
+        index = 1
 
-    lemmas_to_senses[f'{word}:{pos}:{index}'].add(sense_id)
-    related_lemmas[(word, index)].add(pos)
+        lemmas_to_senses[f'{wordform.lower()}:{pos}:{index}'].add(sense_id)
+        related_lemmas[(wordform.lower(), index)].add(pos)
 
 info('Filtering monosemes')
 lemmas_to_senses_filtered = {}
 for lemma_id, sense_ids in lemmas_to_senses.items():
-    if len(sense_ids) >= 1:
+    if len(sense_ids) >= 2:
         lemmas_to_senses_filtered[lemma_id] = sense_ids
+info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemmas_to_senses = lemmas_to_senses_filtered
+
+info('Filtering proper nouns')
+# Takes care of e.g. 'Macedonia'
+# (lemmas where every sense is an instance hypernym)
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    word = lemma_id.split(':')[0]
+    for sense_id in sense_ids:
+        wn_lemma = safe_lemma_from_key(word, sense_id)
+        synset = wn_lemma.synset()
+        instance_hypernyms = synset.instance_hypernyms()
+        if len(instance_hypernyms) == 0:
+            # Add it
+            lemmas_to_senses_filtered[lemma_id] = sense_ids
+            break
+info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemmas_to_senses = lemmas_to_senses_filtered
+
+info('Filtering single letter wordforms')
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    word = lemma_id.split(':')[0]
+    if len(word) > 1:
+        lemmas_to_senses_filtered[lemma_id] = sense_ids
+info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemmas_to_senses = lemmas_to_senses_filtered
+
+info('Filtering wordforms with incorrect number of senses')
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    if MIN_SENSES <= len(sense_ids) <= MAX_SENSES:
+        lemmas_to_senses_filtered[lemma_id] = sense_ids
+info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemmas_to_senses = lemmas_to_senses_filtered
+
+WORD_LIST = set(read_text(whitelist_vocab_file))
+info(f"Filtering only {len(WORD_LIST)} whitelisted words")
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    word = lemma_id.split(':')[0]
+    if word in WORD_LIST:
+        lemmas_to_senses_filtered[lemma_id] = sense_ids
+info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemmas_to_senses = lemmas_to_senses_filtered
+
+# Filter derivationally related forms
+
+# related_forms = set()
+#
+# Add ones with same form
+# for related_pos in related_lemmas[(word, ind)]:
+#     if related_pos != pos:
+#         related_forms.add(f'{word}:{related_pos}:{ind}')
+#
+# senses_to_lemmas = {}
+# for lemma, senses in lemma_to_senses.items():
+#     for sense in senses:
+#         assert sense not in senses_to_lemmas.keys()
+#         senses_to_lemmas[sense] = lemma
+# for sense_id in senses:
+#
+#     # Get sense object
+#     sense_obj = safe_lemma_from_key(word, sense_id)
+#
+#     related_form_objs = sense_obj.derivationally_related_forms()
+#     for related_form_obj in related_form_objs:
+#         # Get the lemma it is a part of
+#         related_form_key = related_form_obj.key()
+#         if related_form_key in senses_to_lemmas.keys():  # If it isn't it has only one sense
+#             related_forms.add(senses_to_lemmas[related_form_key])
+#
+# skip = False
+# for related_lemma in related_forms:
+#     # Skip this lemma if a related lemma has more senses
+#     if len(lemma_to_senses[related_lemma]) > len(senses):
+#         skip = True
+#         break
 
 info('Ordering')
 lemmas_to_senses_ordered = {}
-for lemma_id, sense_ids in lemmas_to_senses_filtered.items():
-    word, pos, index = lemma_id.split(':')
-    synsets = wn.synsets(word)
-    # all_lemmas = []
-    # for synset in synsets:
-    #     all_lemmas += [lemma for lemma in synset.lemmas() if lemma.name().lower() == word]
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    wordform, pos, index = lemma_id.split(':')
+    synsets = wn.synsets(wordform)
     sense_ids_ordered = []
-    for sense in wn.lemmas(word):
+    for sense in wn.lemmas(wordform):
         sense_id = sense.key()
         if sense_id in sense_ids and sense_id not in sense_ids_ordered:
             sense_ids_ordered.append(sense_id)

@@ -107,7 +107,11 @@ export class Sense {
     }
 
     get_outward_facing_id() {
-        return `${this.lemma.word}(${this.new_sense_id})`
+        if (this.backend_sense_id.substring(0, 8) === 'wordnet:') {
+            return `${this.lemma.datastore.senses_to_info[this.backend_sense_id.substring(8)]['word']}(${this.new_sense_id})`
+        } else {
+            return `${this.lemma.word}(${this.new_sense_id})`
+        }
     }
 
     fill_name_cell() {

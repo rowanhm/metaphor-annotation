@@ -4,6 +4,8 @@ from nltk.corpus import wordnet as wn
 from backend.common.common import info, open_pickle, save_pickle
 from backend.common.global_variables import example_sentences_file_princeton, senses_to_info_py_file
 
+assert wn.get_version() == '3.0'
+
 info('Loading and indexing examples')
 examples = open_pickle(example_sentences_file_princeton)
 example_map = defaultdict(list)

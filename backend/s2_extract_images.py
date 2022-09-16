@@ -8,6 +8,7 @@ from backend.common.common import info, warn
 from backend.common.global_variables import image_dir, imagenet_dir
 
 y_new = 100
+assert wn.get_version() == '3.0'
 
 os.makedirs(image_dir, exist_ok=True)
 
