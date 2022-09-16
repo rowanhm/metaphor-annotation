@@ -138,7 +138,6 @@ with open(concepts_to_img_js_file, "w") as fp:
 info('Processing sense to info')
 sense_to_info_flattened = {}
 for sense_id, sense_info in sense_to_info.items():
-    sense_info['examples'] = [ex.to_dict() for ex in sense_info['examples']]
     sense_to_info_flattened[sense_id] = sense_info
 with open(senses_to_info_js_file, "w") as fp:
     json.dump(sense_to_info_flattened, fp)

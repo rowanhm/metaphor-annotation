@@ -6,29 +6,33 @@ from backend.common.global_variables import example_sentences_file_princeton, se
 
 assert wn.get_version() == '3.0'
 
-info('Loading and indexing examples')
+info('Loading examples')
 examples = open_pickle(example_sentences_file_princeton)
-example_map = defaultdict(list)
-for example in examples:
-    sense_ids = example.get_all_senses()
-    for sense_id in sense_ids:
-        example_map[sense_id].append(example)
 
 info('Collating')
 sense_to_info = {}
 
 for synset in wn.all_synsets():
+    concept_id = synset.name()
+    synset_examples = examples[concept_id]
+
     for sense in synset.lemmas():
         sense_id = sense.key()
 
         if sense_id not in sense_to_info.keys():
             word = sense.name()
             assert sense.synset() == synset
-            concept_id = synset.name()
             synonyms = [{"string": info.name(), "sense_id": info.key()} for info in synset.lemmas() if info.name() != word]
 
+            # Find relevent examples
+            relevent_examples = []
+            for example in synset_examples:
+                example_string = example.string
+                if word.lower().replace('_', ' ') in example_string.lower():
+                    relevent_examples.append(example_string)
+
             sense_to_info[sense_id] = {
-                'examples': example_map[sense_id],
+                'examples': relevent_examples,
                 'word': word,
                 'synonyms': synonyms,
                 'concept_id': concept_id

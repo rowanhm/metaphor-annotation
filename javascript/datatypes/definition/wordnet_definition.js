@@ -78,8 +78,7 @@ export class WordNetDefinition {
         if (examples.length > 0) {
             example_text += ', e.g. '
             for (let i = 0; i < examples.length; i++) {
-                const example = examples[i]
-                const example_string = example['string']
+                const example_string = examples[i]
                 example_text += example_string
                 if (i < examples.length - 1) {
                     example_text += ', '

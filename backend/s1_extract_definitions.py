@@ -3,6 +3,7 @@ import itertools
 import os
 import string
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader import WordNetError
@@ -186,7 +187,7 @@ def process_sentence(sentence_xml, collocation_dict=None):
 
 def main():
     definitions = {}  # synset -> annotated_tokens
-    examples = []  # list[annotated_tokens]
+    examples = defaultdict(list)  # synset -> [annotated_tokens]
     synonym_dict = {}
 
     for file in sorted(glob.glob(os.path.join(raw_data_dir, 'WordNet-3.0-glosstag/merged/*.xml'))):
@@ -430,7 +431,7 @@ def main():
                         if not success:
                             warn(f'Synset {synset} ({synonyms}) not found in example: {sentence_object.to_string()}')
 
-                    examples.append(sentence_object)
+                    examples[synset].append(sentence_object)
 
             expected_synonyms = set([lemma.name().replace('_', ' ') for lemma in wn.synset(synset).lemmas()])
             assert synonyms == expected_synonyms, f'Expected {expected_synonyms} but got {synonyms}'
