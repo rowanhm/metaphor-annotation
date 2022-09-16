@@ -37,7 +37,7 @@ export class Screen {
         let title_cell = document.createElement('td')
         title_cell.style.fontSize = '150%'
         title_cell.style.padding = '15px'
-        title_cell.colSpan= '3'
+        title_cell.colSpan= '2'
         title_cell.style.textAlign = 'left'
 
         let title = document.createElement("b")
@@ -78,7 +78,7 @@ export class Screen {
 
         let header_row = document.createElement("tr")
         header_row.style.borderTop = '2px solid black'
-        const headers = ['ID', 'Definition', 'Image', 'Label', 'Relation', 'Features', 'Tools']
+        const headers = ['ID', 'Definition', 'Label', 'Relation', 'Features', 'Tools'] // 'Image'
         for (const header of headers) {
             let cell = make_empty_cell()
             cell.innerHTML = '<b>' + header + '</b>'
@@ -102,7 +102,7 @@ export class Screen {
         table.appendChild(footer)
 
         let count_cell = document.createElement('td')
-        count_cell.colSpan = '2'
+        count_cell.colSpan = '1'
         count_cell.style.paddingTop = `4px`
         count_cell.style.textAlign = 'left'
         count_cell.innerHTML = `<p style="color:grey">${this.manager.queue_index+1}/${this.manager.queue.length}</p>`
@@ -157,7 +157,7 @@ export class Screen {
         // Warning cell
         let footer_row_2 = document.createElement("tr")
         this.warning_cell = document.createElement('td')
-        this.warning_cell.colSpan = '7'
+        this.warning_cell.colSpan = '6'
         this.warning_cell.style.paddingTop = `8px`
         this.warning_cell.style.color = 'red'
 

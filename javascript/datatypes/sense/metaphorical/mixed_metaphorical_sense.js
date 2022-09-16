@@ -35,7 +35,7 @@ export class MixedMetaphoricalSense extends MetaphoricalSense {
         this.row.innerHTML = ''
         this.row.appendChild(this.name_cell)
         this.row.appendChild(this.definition.definition_cell)
-        this.row.appendChild(this.definition.image_cell)
+        //this.row.appendChild(this.definition.image_cell)
         this.row.appendChild(this.label_selector_cell)
         this.row.appendChild(this.relation_cell)
         this.row.appendChild(this.feature_cell)

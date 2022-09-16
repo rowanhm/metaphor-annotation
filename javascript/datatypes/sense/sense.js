@@ -76,7 +76,7 @@ export class Sense {
         this.feature_cell = make_empty_cell()
         this.feature_cell.style.textAlign = 'right'
         this.definition.make_definition_cell()
-        this.definition.make_image_cell()
+        // this.definition.make_image_cell()
         this.make_row()
     }
 
@@ -180,7 +180,6 @@ export class Sense {
     make_row() {
         // Fill all cells
         this.fill_name_cell()
-        this.fill_name_cell()
         this.fill_label_cell()
         this.fill_relation_cell()
         this.fill_features_cell()
@@ -196,7 +195,7 @@ export class Sense {
         this.row.innerHTML = ''
         this.row.appendChild(this.name_cell)
         this.row.appendChild(this.definition.definition_cell)
-        this.row.appendChild(this.definition.image_cell)
+        // this.row.appendChild(this.definition.image_cell)
         this.row.appendChild(this.label_selector_cell)
         this.row.appendChild(this.relation_cell)
         this.row.appendChild(this.feature_cell)
