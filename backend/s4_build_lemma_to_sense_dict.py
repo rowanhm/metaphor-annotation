@@ -73,38 +73,44 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered
 
-# Filter derivationally related forms
+info('Filtering derivationally related forms')
+senses_to_lemmas = {}
+for lemma, senses in lemmas_to_senses.items():
+    for sense in senses:
+        assert sense not in senses_to_lemmas.keys()
+        senses_to_lemmas[sense] = lemma
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemmas_to_senses.items():
+    word, pos, index = lemma_id.split(':')
 
-# related_forms = set()
-#
-# Add ones with same form
-# for related_pos in related_lemmas[(word, ind)]:
-#     if related_pos != pos:
-#         related_forms.add(f'{word}:{related_pos}:{ind}')
-#
-# senses_to_lemmas = {}
-# for lemma, senses in lemma_to_senses.items():
-#     for sense in senses:
-#         assert sense not in senses_to_lemmas.keys()
-#         senses_to_lemmas[sense] = lemma
-# for sense_id in senses:
-#
-#     # Get sense object
-#     sense_obj = safe_lemma_from_key(word, sense_id)
-#
-#     related_form_objs = sense_obj.derivationally_related_forms()
-#     for related_form_obj in related_form_objs:
-#         # Get the lemma it is a part of
-#         related_form_key = related_form_obj.key()
-#         if related_form_key in senses_to_lemmas.keys():  # If it isn't it has only one sense
-#             related_forms.add(senses_to_lemmas[related_form_key])
-#
-# skip = False
-# for related_lemma in related_forms:
-#     # Skip this lemma if a related lemma has more senses
-#     if len(lemma_to_senses[related_lemma]) > len(senses):
-#         skip = True
-#         break
+    related_forms = set()
+    for related_pos in related_lemmas[(word, index)]:
+        if related_pos != pos:
+            related_forms.add(f'{word}:{related_pos}:{index}')
+
+    for sense_id in sense_ids:
+        # Get sense object
+        sense_obj = safe_lemma_from_key(word, sense_id)
+
+        related_form_objs = sense_obj.derivationally_related_forms()
+        for related_form_obj in related_form_objs:
+            # Get the lemma it is a part of
+            related_form_key = related_form_obj.key()
+            if related_form_key in senses_to_lemmas.keys():  # If it isn't it has already been filtered
+                related_forms.add(senses_to_lemmas[related_form_key])
+
+    skip = False
+    for related_lemma in related_forms:
+        # Skip this lemma if a related lemma has more senses
+        if len(lemmas_to_senses[related_lemma]) > len(sense_ids):
+            skip = True
+            break
+
+    if not skip:
+        lemmas_to_senses_filtered[lemma_id] = sense_ids
+
+info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemmas_to_senses = lemmas_to_senses_filtered
 
 info('Ordering')
 lemmas_to_senses_ordered = {}
