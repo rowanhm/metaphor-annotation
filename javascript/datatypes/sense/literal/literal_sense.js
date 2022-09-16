@@ -67,6 +67,9 @@ export class LiteralSense extends Sense {
 
     sanify() {
         if (this.insane) {
+            if (this.lemma.literal_senses().length === 1) {
+                this.group = null
+            }
             this.insane = false
         }
     }
@@ -89,65 +92,68 @@ export class LiteralSense extends Sense {
     fill_relation_cell() {
         console.log(`Filling info for ${this.new_sense_id} (group ${this.get_group()})`)
         this.relation_cell.innerHTML = ''
-        let no_break = document.createElement('nobr')
+        if (this.lemma.literal_senses().length > 1) {
 
-        no_break.innerHTML = 'In group '
+            let no_break = document.createElement('nobr')
 
-        let select_group = document.createElement("select");
-        select_group.id = `${this.new_sense_id}:group_select`
-        let that = this
-        select_group.onchange = function(){
-            that.lemma.screen.logs.log('set_group', that.backend_sense_id, `group_${document.getElementById(`${that.new_sense_id}:group_select`).value}`)
-            that.update_group()
-        }
+            no_break.innerHTML = 'In group '
 
-        let blank_option = document.createElement("option");
-        blank_option.value = null
-        blank_option.disabled = true
-        blank_option.hidden = true
-        blank_option.innerHTML = 'select';
-        select_group.appendChild(blank_option)
-
-        let found_group = false
-        if (this.get_group() === null){
-            blank_option.selected = true
-            found_group = true
-        }
-
-        const groups = this.lemma.get_groups()
-
-        for (const group of groups) {
-            if (group !== null) {
-
-                let option = document.createElement("option");
-                option.value = group.toString();
-                option.text = group.toString();
-                if (group === this.get_group()) {
-                    // Select
-                    option.selected = true
-                    found_group = true
-                }
-                select_group.appendChild(option);
+            let select_group = document.createElement("select");
+            select_group.id = `${this.new_sense_id}:group_select`
+            let that = this
+            select_group.onchange = function () {
+                that.lemma.screen.logs.log('set_group', that.backend_sense_id, `group_${document.getElementById(`${that.new_sense_id}:group_select`).value}`)
+                that.update_group()
             }
+
+            let blank_option = document.createElement("option");
+            blank_option.value = null
+            blank_option.disabled = true
+            blank_option.hidden = true
+            blank_option.innerHTML = 'select';
+            select_group.appendChild(blank_option)
+
+            let found_group = false
+            if (this.get_group() === null) {
+                blank_option.selected = true
+                found_group = true
+            }
+
+            const groups = this.lemma.get_groups()
+
+            for (const group of groups) {
+                if (group !== null) {
+
+                    let option = document.createElement("option");
+                    option.value = group.toString();
+                    option.text = group.toString();
+                    if (group === this.get_group()) {
+                        // Select
+                        option.selected = true
+                        found_group = true
+                    }
+                    select_group.appendChild(option);
+                }
+            }
+
+            // Add new group option
+            let next_lowest_group = 1
+            while (groups.includes(next_lowest_group)) {
+                next_lowest_group++
+            }
+
+            let option = document.createElement("option");
+            option.value = next_lowest_group.toString();
+            option.text = `${next_lowest_group} (new)`;
+            select_group.appendChild(option);
+
+            if (!found_group) {
+                console.error(`Failed to find group for sense ${this.new_sense_id}`)
+            }
+
+            no_break.appendChild(select_group)
+            this.relation_cell.appendChild(no_break)
         }
-
-        // Add new group option
-        let next_lowest_group = 1
-        while (groups.includes(next_lowest_group)) {
-            next_lowest_group++
-        }
-
-        let option = document.createElement("option");
-        option.value = next_lowest_group.toString();
-        option.text = `${next_lowest_group} (new)`;
-        select_group.appendChild(option);
-
-        if (!found_group) {
-            console.error(`Failed to find group for sense ${this.new_sense_id}`)
-        }
-
-        no_break.appendChild(select_group)
-        this.relation_cell.appendChild(no_break)
     }
 
     update_group() {
@@ -163,7 +169,11 @@ export class LiteralSense extends Sense {
 
     get_data() {
         let sense_data = super.get_data()
-        sense_data['group'] = this.get_group()
+        if (this.lemma.literal_senses().length === 1) {
+            sense_data['group'] = 1
+        } else {
+            sense_data['group'] = this.get_group()
+        }
         sense_data['features'] = this.get_features()
         return sense_data
     }
@@ -232,8 +242,10 @@ export class LiteralSense extends Sense {
     }
 
     is_stable() {
-        if (this.get_group() === null) {
-            return false
+        if (this.lemma.literal_senses().length > 1) {
+            if (this.get_group() === null) {
+                return false
+            }
         }
         for (const feature of this.get_feature_list()) {
             if (!(is_valid_feature(feature))) {

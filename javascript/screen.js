@@ -28,18 +28,54 @@ export class Screen {
         table.style.marginRight = 'auto'
         form.appendChild(table)
 
-        let caption = document.createElement("caption")
-        caption.style.fontSize = '150%'
-        caption.style.padding = '15px'
 
-        let title = document.createElement("b")
-        title.innerHTML = this.lemma.word
-        caption.appendChild(title)
-        caption.innerHTML += ' (' + this.lemma.pos + ')'
-        table.appendChild(caption)
 
         console.log(`Adding header`)
         let header = document.createElement('thead')
+        // Adding word knowledge options
+        let title_row = document.createElement("tr")
+        let title_cell = document.createElement('td')
+        title_cell.style.fontSize = '150%'
+        title_cell.style.padding = '15px'
+        title_cell.colSpan= '3'
+        title_cell.style.textAlign = 'left'
+
+        let title = document.createElement("b")
+        title.innerHTML = this.lemma.word
+        title_cell.appendChild(title)
+        title_cell.innerHTML += ' (' + this.lemma.pos + ')'
+        title_row.appendChild(title_cell)
+
+        let word_knowledge_cell = document.createElement("td")
+        word_knowledge_cell.colSpan = '4'
+        word_knowledge_cell.style.textAlign = 'right'
+
+        this.word_knowledge = null
+        let index = 0
+        const options = ['I feel comfortable using this word', 'I know this word but would not use it comfortably', 'I have not heard of this word']
+        for (const option of options) {
+            let nobreak = document.createElement('nobr')
+            let input = document.createElement("input");
+            input.type = "radio"
+            input.name = 'word_knowledge'
+            input.id = `word_knowledge:${index}`
+            input.onclick = function () {
+                that.word_knowledge = option
+                console.log(`Selected word knowledge ${option}`)
+            }
+            let label = document.createElement("label");
+            label.htmlFor = `word_knowledge:${index}`
+            label.innerHTML += option
+            nobreak.appendChild(input)
+            nobreak.appendChild(label)
+            word_knowledge_cell.appendChild(nobreak)
+            nobreak.appendChild(document.createElement("br"))
+
+            index++
+        }
+        title_row.appendChild(word_knowledge_cell)
+        header.appendChild(title_row)
+
         let header_row = document.createElement("tr")
         header_row.style.borderTop = '2px solid black'
         const headers = ['ID', 'Definition', 'Image', 'Label', 'Relation', 'Features', 'Tools']
@@ -58,6 +94,7 @@ export class Screen {
 
         console.log(`Adding footer`)
         let footer = document.createElement('tfoot')
+
         let footer_row = document.createElement("tr")
         footer_row.id = 'footer'
         footer_row.style.borderTop = '2px solid black'
@@ -66,7 +103,7 @@ export class Screen {
 
         let count_cell = document.createElement('td')
         count_cell.colSpan = '2'
-        count_cell.style.paddingTop = `8px`
+        count_cell.style.paddingTop = `4px`
         count_cell.style.textAlign = 'left'
         count_cell.innerHTML = `<p style="color:grey">${this.manager.queue_index+1}/${this.manager.queue.length}</p>`
         footer_row.appendChild(count_cell)
@@ -152,10 +189,14 @@ export class Screen {
         return false
     }
 
+    is_stable() {
+        return (this.lemma.is_stable() && (this.word_knowledge !== null))
+    }
+
     submit_annotation() {
 
         // Extract data
-        if (!this.lemma.is_stable()) {
+        if (!this.is_stable()) {
             this.warning_cell.innerHTML = 'Cannot submit (info not complete). Senses which are missing info have their IDs in red (left column). Please make sure:<br>'
             this.warning_cell.innerHTML += '* All senses are labelled metaphorical or literal<br>'
             this.warning_cell.innerHTML += '* All literal senses are in a group<br>'
@@ -164,12 +205,13 @@ export class Screen {
             this.warning_cell.innerHTML += "* All metaphorical senses have at least one of the literal sense's features missing or modified<br>"
             this.warning_cell.innerHTML += "* No sense features are blank<br>"
             this.warning_cell.innerHTML += "* No sense features contain illegal characters ('.', '/', '#', '$', '[', ']')<br>"
-            this.warning_cell.innerHTML += '* All ghost sense have a definition'
+            this.warning_cell.innerHTML += '* All ghost sense have a definition<br>'
+            this.warning_cell.innerHTML += '* You have labelled how well you know this word'
             return false
         }
 
         const return_data = this.lemma.get_data()
-        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data).then(() => {
+        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data, this.word_knowledge).then(() => {
 
             // Extract features
             let feature_frequencies = this.manager.datastore.feature_frequencies
@@ -184,7 +226,7 @@ export class Screen {
             }
 
             save_features(this.manager.user_id, feature_frequencies).then(() => {
-                save_logs(this.manager.user_id, this.logs.get_data(), this.lemma.lemma_name).then(() => {
+                save_logs(this.manager.user_id, this.logs.get_data(), this.lemma.lemma_name, this.manager.queue_name).then(() => {
                     // Next word
                     this.manager.update_queue_and_render()
                 })

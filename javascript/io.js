@@ -20,8 +20,10 @@ const app = initializeApp(firebaseConfig);
 // Initialize Realtime Database and get a reference to the service
 const database = getDatabase(app);
 
-export function save_lemma(user_id, queue_id, lemma_id, lemma_data) {
-    let promise = set(ref(database, `${user_id}/queues/${queue_id}/${lemma_id}`), lemma_data);
+export function save_lemma(user_id, queue_id, lemma_id, lemma_data, word_knowledge) {
+    let promise = set(ref(database, `${user_id}/queues/${queue_id}/${lemma_id}`),
+        {'word_knowledge': word_knowledge,
+        'senses': lemma_data});
     return promise
 }
 
@@ -40,7 +42,7 @@ export function save_features(user_id, feature_frequencies) {
     return promise
 }
 
-export function save_logs(user_id, logs, lemma_id) {
-    let promise = set(ref(database, `${user_id}/logs/${lemma_id}`), logs);
+export function save_logs(user_id, logs, lemma_id, queue_id) {
+    let promise = set(ref(database, `${user_id}/queues/${queue_id}/${lemma_id}/logs`), logs);
     return promise
 }
