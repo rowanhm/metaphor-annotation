@@ -49,6 +49,7 @@ export class Screen {
         let word_knowledge_cell = document.createElement("td")
         word_knowledge_cell.colSpan = '4'
         word_knowledge_cell.style.textAlign = 'right'
+        word_knowledge_cell.style.color = 'red'
 
         this.word_knowledge = null
         let index = 0
@@ -61,6 +62,7 @@ export class Screen {
             input.id = `word_knowledge:${index}`
             input.onclick = function () {
                 that.word_knowledge = option
+                word_knowledge_cell.style.color = 'green'
                 console.log(`Selected word knowledge ${option}`)
             }
             let label = document.createElement("label");
