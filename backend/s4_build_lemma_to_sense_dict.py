@@ -19,7 +19,7 @@ for synset in wn.all_synsets():
         index = 1
 
         lemmas_to_senses[f'{wordform.lower()}:{pos}:{index}'].add(sense_id)
-        related_lemmas[(wordform.lower(), index)].add(pos)
+        related_lemmas[(wordform.lower(), str(index))].add(pos)
 
 info('Filtering monosemes')
 lemmas_to_senses_filtered = {}
@@ -42,7 +42,8 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
     related_forms = set()
     for related_pos in related_lemmas[(word, index)]:
         if related_pos != pos:
-            related_forms.add(f'{word}:{related_pos}:{index}')
+            if f'{word}:{related_pos}:{index}' in lemmas_to_senses.keys():  # If it isn't it has already been filtered
+                related_forms.add(f'{word}:{related_pos}:{index}')
 
     for sense_id in sense_ids:
         # Get sense object
