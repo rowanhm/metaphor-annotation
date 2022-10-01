@@ -1,8 +1,7 @@
 import {Sense} from "./sense/sense.js";
-import {MetaphoricalSense} from "./sense/metaphorical/metaphorical_sense.js";
-import {LiteralSense} from "./sense/literal/literal_sense.js";
-import {MixedLiteralSense} from "./sense/literal/mixed_literal_sense.js";
-import {GhostLiteralSense} from "./sense/literal/ghost_literal_sense.js";
+import {MetaphoricalSense} from "./sense/metaphorical_sense.js";
+import {LiteralSense} from "./sense/literal_sense.js";
+import {RelatedSense} from "./sense/related_sense.js";
 
 export class Lemma {
 
@@ -21,6 +20,9 @@ export class Lemma {
             const new_id = i.toString()
             let sense = new Sense(null)
             sense.initialise_wordnet_sense(this, old_id, new_id)
+            this.new_id_to_sense.set(new_id, sense)
+            this.new_id_order.push(new_id)
+
             i++
         }
         this.next_available_index = i
@@ -52,15 +54,6 @@ export class Lemma {
             output.push(this.new_id_to_sense.get(new_id))
         }
         return output
-    }
-
-    get_groups() {
-        let groups = new Set()
-        for (const sense of this.literal_senses()) {
-            groups.add(sense.get_group())
-        }
-        let groups_ordered = Array.from(groups).sort((a, b) => a - b);
-        return groups_ordered
     }
 
     metaphorical_senses() {
@@ -105,46 +98,95 @@ export class Lemma {
     new_ghost_sense() {
         const new_id = this.next_available_index.toString()
         this.next_available_index++
-        new GhostLiteralSense(this, new_id)
+        let new_sense = new Sense(null)
+        new_sense.initialise_custom_sense(this, new_id)
+
+        this.new_id_to_sense.set(new_id, new_sense)
+        this.new_id_order.splice(this.next_available_index, 0, new_id)
+
         this.mark_all_insane()
         this.refresh()
     }
 
     delete_ghost_sense(new_sense_id) {
-        let sense = this.new_id_to_sense.get(new_sense_id)
-        sense.remove()
+        // Remove it
+        const position = this.new_id_order.indexOf(new_sense_id)
+        this.new_id_to_sense.delete(new_sense_id)
+        this.new_id_order.splice(position, 1)
+
         this.mark_all_insane()
         this.refresh()
     }
 
     split_mixed_sense(new_sense_id) {
         let sense = this.new_id_to_sense.get(new_sense_id)
-        new MixedLiteralSense(sense) // implicitly creates met half
+
+        let lit_half = new Sense(sense)
+        lit_half.new_sense_id = new_sense_id+'A'
+        lit_half.is_mixed = true
+        lit_half.definition = sense.definition.copy()
+        lit_half.label_options = ['Literal', 'Related']
+        lit_half.build_cells()
+
+        let met_half = new MetaphoricalSense(sense)
+        met_half.new_sense_id = new_sense_id+'B'
+        met_half.is_mixed = true
+        met_half.definition = sense.definition.copy()
+        met_half.label_options = ['Metaphorical']
+        met_half.border_pattern = '1px dotted black'
+        met_half.build_cells()
+
+        this.new_id_to_sense.set(lit_half.new_sense_id, lit_half)
+        this.new_id_to_sense.set(met_half.new_sense_id, met_half)
+
+        // Replace
+        const position = this.new_id_order.indexOf(new_sense_id)
+        this.new_id_order.splice(position, 1, lit_half.new_sense_id, met_half.new_sense_id)
+
         this.mark_all_insane()
         this.refresh()
     }
 
     merge_mixed_sense(new_sense_id) {
-        let sense = this.new_id_to_sense.get(new_sense_id)
-        const insert_position = sense.remove()
-        // Reinsert the base sense
-        let base_sense = sense.base_sense
-        base_sense.embed(insert_position)
-        base_sense.build_cells() // Needed to fix reference issue
-        new Sense(base_sense) // Downcast it to remove literality
+        const base_sense_id = new_sense_id.slice(0, -1)
+
+        this.new_id_to_sense.delete(base_sense_id + 'A')
+        this.new_id_to_sense.delete(base_sense_id + 'B')
+
+        const position = this.new_id_order.indexOf(base_sense_id + 'A')
+        this.new_id_order.splice(position, 2, base_sense_id)
+
+        // Reset it to unlabelled
+        this.new_id_to_sense.set(base_sense_id,
+            new Sense(this.new_id_to_sense.get(base_sense_id)))
+
         this.mark_all_insane()
         this.refresh()
     }
 
     set_label(new_sense_id, option) {
         let sense = this.new_id_to_sense.get(new_sense_id)
+        let new_sense = null
         if (option === 'metaphorical') {
-            new MetaphoricalSense(sense)
+            new_sense = new MetaphoricalSense(sense)
         } else if (option === 'literal') {
-            new LiteralSense(sense)
+            new_sense = new LiteralSense(sense)
+        } else if (option === 'related') {
+            new_sense = new RelatedSense(sense)
         } else {
             console.error(`Invalid option for label change: ${option}`)
         }
+
+        // Swap the senses:
+        /* const position = this.new_id_order.indexOf(sense.new_sense_id)
+        this.new_id_to_sense.delete(sense.new_sense_id)
+        this.new_id_order.splice(position, 1)
+        if (position === -1) {
+            console.error('Inserting a sense to invalid position')
+        } */
+        this.new_id_to_sense.set(sense.new_sense_id, new_sense)
+        // this.new_id_order.splice(position, 0, new_sense.new_sense_id)
+
         this.mark_all_insane()
         this.refresh()
     }
@@ -155,16 +197,16 @@ export class Lemma {
         for (const sense of this.all_senses()) {
             const sense_id = sense.backend_sense_id
             let sense_data = sense.get_data()
-            if (sense_id in return_data) {
-                // Add the additional data
-                for (const [key, value] of Object.entries(sense_data)) {
-                    return_data[sense_id][key] = value
+            if (sense.is_mixed) {
+                if (sense instanceof MetaphoricalSense) {
+                    return_data[sense_id]['metaphorical_half'] = sense_data
+                } else {
+                    // Related or literal
+                    return_data[sense_id]['literal_half'] = sense_data
                 }
-            } else {
-                return_data[sense_id] = sense_data
             }
+            return_data[sense_id] = sense_data
         }
-
         return return_data
     }
 

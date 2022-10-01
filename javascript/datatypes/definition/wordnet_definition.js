@@ -124,4 +124,9 @@ export class WordNetDefinition {
 
         return linked_text
     }
+
+    is_stable() {
+        return true
+    }
+
 }

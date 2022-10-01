@@ -1,7 +1,7 @@
-import {Sense} from "../sense.js";
-import {LiteralSense} from "../literal/literal_sense.js";
-import {autocomplete} from "../../../autocompletion.js";
-import {is_valid_feature} from "../../../utilities.js";
+import {Sense} from "./sense.js";
+import {LiteralSense} from "./literal_sense.js";
+import {autocomplete} from "../../autocompletion.js";
+import {is_valid_feature} from "../../utilities.js";
 
 export class MetaphoricalSense extends Sense {
 
@@ -10,6 +10,7 @@ export class MetaphoricalSense extends Sense {
     constructor(sense) {
         super(sense);
         this.resembles = null
+        this.label = 'Metaphorical'
         this.reset_features()
     }
 
@@ -42,10 +43,6 @@ export class MetaphoricalSense extends Sense {
             output[feature_id] = transformation_input.value
         }
         return output
-    }
-
-    get_label() {
-        return 'Metaphorical'
     }
 
     get_resembles() {
@@ -136,7 +133,7 @@ export class MetaphoricalSense extends Sense {
     }
 
     set_colour() {
-        this.row.style.backgroundColor = '#C0DDFA'
+        this.row.style.backgroundColor = '#F8D9FF'
     }
 
     fill_relation_cell() {
@@ -144,7 +141,7 @@ export class MetaphoricalSense extends Sense {
         this.relation_cell.innerHTML = ''
 
         let resemblance_cell = document.createElement('nobr')
-        resemblance_cell.innerHTML = 'Resembles '
+        resemblance_cell.innerHTML = 'Connects to '
 
         let select_resemblance = document.createElement("select");
         select_resemblance.id = `${this.new_sense_id}:resemblance_select`
@@ -293,13 +290,16 @@ export class MetaphoricalSense extends Sense {
 
     get_data() {
         let sense_data = super.get_data()
-        sense_data['resembles'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
+        sense_data['metaphor_resembles'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
         sense_data['feature_map'] = this.get_feature_labels()
         sense_data['feature_modifications'] = this.get_transformations()
         return sense_data
     }
 
     is_stable() {
+        if (!super.is_stable()) {
+            return false
+        }
         if (this.get_resembles() === null) {
             return false
         }

@@ -19,38 +19,27 @@ export class Sense {
             this.backend_sense_id = sense.backend_sense_id
             this.feature_cell = sense.feature_cell
             this.definition.sense = this
-
-            // Embed
-            this.embed_with_removal(sense)
+            this.label_options = sense.label_options
+            this.is_mixed = sense.is_mixed
+            this.is_ghost = sense.is_ghost
         }
+
+        this.label = null
+        this.border_pattern = '1px solid black'
     }
 
     is_stable() {
-        return false
+        if (!this.definition.is_stable()) {
+            return false
+        }
+        if (this.get_label() === null) {
+            return false
+        }
+        return true
     }
 
     get_label() {
-        return null
-    }
-
-    remove() {
-        const position = this.lemma.new_id_order.indexOf(this.new_sense_id)
-        this.lemma.new_id_to_sense.delete(this.new_sense_id)
-        this.lemma.new_id_order.splice(position, 1)
-        return position
-    }
-
-    embed_with_removal(sense) {
-        const insert_position = sense.remove()
-        this.embed(insert_position)
-    }
-
-    embed(insert_position) {
-        if (insert_position === -1) {
-            console.error('Inserting a sense to invalid position')
-        }
-        this.lemma.new_id_to_sense.set(this.new_sense_id, this)
-        this.lemma.new_id_order.splice(insert_position, 0, this.new_sense_id)
+        return this.label
     }
 
     mark_insane() {
@@ -65,7 +54,7 @@ export class Sense {
 
     build_cells() {
         this.row = document.createElement("tr");
-        this.row.style.borderTop = '1px solid black'
+        this.row.style.borderTop = this.border_pattern
         this.name_cell = make_empty_cell()
         this.name_cell.style.textAlign = 'center'
         this.tool_cell = make_empty_cell()
@@ -81,14 +70,15 @@ export class Sense {
     }
 
     initialise_wordnet_sense(lemma, wordnet_sense_id, new_sense_id) {
-
         this.lemma = lemma
         this.backend_sense_id = `wordnet:${wordnet_sense_id}`
         this.new_sense_id = new_sense_id
         this.definition = new WordNetDefinition(lemma, wordnet_sense_id)
-
+        this.is_mixed = false
+        this.is_ghost = false
+        // Only literal half will be created this ways -- other initialised as met
+        this.label_options = ['Literal', 'Related', 'Metaphorical']
         this.build_cells()
-        this.embed(lemma.new_id_order.length)
     }
 
     initialise_custom_sense(lemma, new_sense_id) {
@@ -96,9 +86,10 @@ export class Sense {
         this.backend_sense_id = `new:${this.lemma.get_next_new_sense_id()}`
         this.new_sense_id = new_sense_id
         this.definition = new CustomDefinition(this)
-
+        this.label_options = ['Literal' , 'Related']
+        this.is_mixed = false
+        this.is_ghost = true
         this.build_cells()
-        this.embed(lemma.new_id_order.length)
     }
 
     get_row() {
@@ -126,46 +117,82 @@ export class Sense {
     fill_tool_cell() {
         let that = this
         this.tool_cell.innerHTML = ''
-        let split_button = document.createElement("button")
-        split_button.type = 'button'
-        split_button.onclick = function () {
-            that.lemma.screen.logs.log(`split`, that.backend_sense_id, ``)
-            that.lemma.split_mixed_sense(that.new_sense_id)
+        this.tool_cell.style.backgroundColor='white'
+        this.tool_cell.style.textAlign = 'center'
+
+        if (this.is_ghost) { // Delete button
+            let delete_button = document.createElement("button")
+            delete_button.type = 'button'
+            delete_button.onclick = function () {
+                that.lemma.screen.logs.log(`delete_ghost_sense`, that.backend_sense_id, ``)
+                that.lemma.delete_ghost_sense(that.new_sense_id)
+            }
+            delete_button.innerHTML = 'Delete'
+            this.tool_cell.appendChild(delete_button)
+
+        } else {
+
+            if (!this.is_mixed) { // Split button
+                let split_button = document.createElement("button")
+                split_button.type = 'button'
+                split_button.onclick = function () {
+                    that.lemma.screen.logs.log(`split`, that.backend_sense_id, ``)
+                    that.lemma.split_mixed_sense(that.new_sense_id)
+                }
+                split_button.innerHTML = 'Split'
+                this.tool_cell.appendChild(split_button)
+
+            } else { // Merge button
+                if (this.get_label() !== 'Metaphorical') {
+                    this.tool_cell.rowSpan = "2"
+
+                    let remerge_button = document.createElement("button")
+                    remerge_button.type = 'button'
+                    remerge_button.onclick = function () {
+                        that.lemma.screen.logs.log(`remerge`, that.backend_sense_id, ``)
+                        that.lemma.merge_mixed_sense(that.new_sense_id)
+                    }
+                    remerge_button.innerHTML = '<nobr>Re-merge</nobr>'
+                    this.tool_cell.appendChild(remerge_button)
+                }
+            }
         }
-        split_button.innerHTML = 'Split'
-        this.tool_cell.appendChild(split_button)
     }
 
     fill_label_cell() {
-        let that = this
-        this.label_selector_cell.innerHTML = ''
-        const select_name = `${this.new_sense_id}:label_assign`
-        for (const option of ['Literal', 'Metaphorical']) {
-            let no_break = document.createElement('nobr')
-            const name = `${this.new_sense_id}:label_assign:${option}`
+        if (this.label_options.length > 1) {
+            let that = this
+            this.label_selector_cell.innerHTML = ''
+            const select_name = `${this.new_sense_id}:label_assign`
+            for (const option of this.label_options) {
+                let no_break = document.createElement('nobr')
+                const name = `${this.new_sense_id}:label_assign:${option}`
 
-            let input = document.createElement("input");
-            input.type = "radio"
-            input.name = select_name
-            input.id = name
-            input.onclick = function () {
-                that.lemma.screen.logs.log(option.toLowerCase(), that.backend_sense_id, '')
-                that.lemma.set_label(that.new_sense_id, option.toLowerCase())
+                let input = document.createElement("input");
+                input.type = "radio"
+                input.name = select_name
+                input.id = name
+                input.onclick = function () {
+                    that.lemma.screen.logs.log(option.toLowerCase(), that.backend_sense_id, '')
+                    that.lemma.set_label(that.new_sense_id, option.toLowerCase())
+                }
+                no_break.appendChild(input)
+
+                let label = document.createElement("label");
+                label.htmlFor = name
+                label.innerHTML += option
+
+                if (option === this.get_label()) {
+                    input.checked = true
+                }
+
+                no_break.appendChild(label)
+
+                no_break.appendChild(document.createElement("br"))
+                this.label_selector_cell.appendChild(no_break)
             }
-            no_break.appendChild(input)
-
-            let label = document.createElement("label");
-            label.htmlFor = name
-            label.innerHTML += option
-
-            if (option === this.get_label()){
-                input.checked = true
-            }
-
-            no_break.appendChild(label)
-
-            no_break.appendChild(document.createElement("br"))
-            this.label_selector_cell.appendChild(no_break)
+        } else {
+            this.label_selector_cell.innerHTML = this.label_options[0]
         }
     }
 
@@ -199,7 +226,10 @@ export class Sense {
         this.row.appendChild(this.label_selector_cell)
         this.row.appendChild(this.relation_cell)
         this.row.appendChild(this.feature_cell)
-        this.row.appendChild(this.tool_cell)
+        if ((!this.is_mixed) || (this.is_mixed && (this.get_label() !== 'Metaphorical'))) {
+            // Don't add the tool cell for mixed metaphorical senses
+            this.row.appendChild(this.tool_cell)
+        }
     }
 
     set_colour() {
@@ -208,7 +238,12 @@ export class Sense {
 
     get_data() {
         let sense_data = {}
+        sense_data['mixed'] = this.is_mixed
+        sense_data['ghost'] = this.is_ghost
         sense_data['label'] = this.get_label()
+        if (this.definition instanceof CustomDefinition) {
+            sense_data['definition'] = this.definition.get_definition()
+        }
         return sense_data
     }
 

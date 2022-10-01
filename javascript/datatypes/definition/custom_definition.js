@@ -23,4 +23,12 @@ export class CustomDefinition {
     make_image_cell() {
         this.image_cell = make_empty_cell()
     }
+
+    is_stable() {
+        const defn = this.get_definition()
+        if (defn.length === 0) {
+            return false
+        }
+        return true
+    }
 }

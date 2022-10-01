@@ -28,8 +28,6 @@ export class Screen {
         table.style.marginRight = 'auto'
         form.appendChild(table)
 
-
-
         console.log(`Adding header`)
         let header = document.createElement('thead')
         // Adding word knowledge options
@@ -37,8 +35,8 @@ export class Screen {
         let title_cell = document.createElement('td')
         title_cell.style.fontSize = '150%'
         title_cell.style.padding = '15px'
-        title_cell.colSpan= '2'
-        title_cell.style.textAlign = 'left'
+        title_cell.colSpan= '6'
+        title_cell.style.textAlign = 'center'
 
         let title = document.createElement("b")
         title.innerHTML = this.lemma.word
@@ -46,36 +44,6 @@ export class Screen {
         title_cell.innerHTML += ' (' + this.lemma.pos + ')'
         title_row.appendChild(title_cell)
 
-        let word_knowledge_cell = document.createElement("td")
-        word_knowledge_cell.colSpan = '4'
-        word_knowledge_cell.style.textAlign = 'right'
-        word_knowledge_cell.style.color = 'red'
-
-        this.word_knowledge = null
-        let index = 0
-        const options = ['I feel comfortable using this word', 'I know this word but would not use it comfortably', 'I have not heard of this word']
-        for (const option of options) {
-            let nobreak = document.createElement('nobr')
-            let input = document.createElement("input");
-            input.type = "radio"
-            input.name = 'word_knowledge'
-            input.id = `word_knowledge:${index}`
-            input.onclick = function () {
-                that.word_knowledge = option
-                word_knowledge_cell.style.color = 'green'
-                console.log(`Selected word knowledge ${option}`)
-            }
-            let label = document.createElement("label");
-            label.htmlFor = `word_knowledge:${index}`
-            label.innerHTML += option
-            nobreak.appendChild(input)
-            nobreak.appendChild(label)
-            word_knowledge_cell.appendChild(nobreak)
-            nobreak.appendChild(document.createElement("br"))
-
-            index++
-        }
-        title_row.appendChild(word_knowledge_cell)
         header.appendChild(title_row)
 
         let header_row = document.createElement("tr")
@@ -97,9 +65,46 @@ export class Screen {
         console.log(`Adding footer`)
         let footer = document.createElement('tfoot')
 
+        let word_knowledge_row = document.createElement("tr")
+        footer.appendChild(word_knowledge_row)
+        let word_knowledge_cell = document.createElement("td")
+        word_knowledge_row.appendChild(word_knowledge_cell)
+        word_knowledge_cell.colSpan = '6'
+        word_knowledge_cell.style.textAlign = 'right'
+        // word_knowledge_cell.style.color = 'red'
+        word_knowledge_row.style.borderTop = '2px solid black'
+
+        this.word_knowledge = null
+        let index = 0
+        const options = ['I feel comfortable using this word', 'I know this word but not all of its senses', 'I have heard of this word but no not know what it means', 'I have not heard of this word']
+        for (const option of options) {
+            let nobreak = document.createElement('nobr')
+            let input = document.createElement("input");
+            input.type = "radio"
+            input.name = 'word_knowledge'
+            input.id = `word_knowledge:${index}`
+            input.onclick = function () {
+                that.word_knowledge = option
+                // word_knowledge_cell.style.color = 'green'
+                console.log(`Selected word knowledge ${option}`)
+            }
+            let label = document.createElement("label");
+            label.htmlFor = `word_knowledge:${index}`
+            label.innerHTML += option
+            nobreak.appendChild(input)
+            nobreak.appendChild(label)
+            word_knowledge_cell.appendChild(nobreak)
+            nobreak.appendChild(document.createElement("br"))
+            if (index === 0) {
+                // Default to known
+                that.word_knowledge = option
+                input.checked = true
+            }
+            index++
+        }
+
         let footer_row = document.createElement("tr")
         footer_row.id = 'footer'
-        footer_row.style.borderTop = '2px solid black'
         footer.appendChild(footer_row)
         table.appendChild(footer)
 
