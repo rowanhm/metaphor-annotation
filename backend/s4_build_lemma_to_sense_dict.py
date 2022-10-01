@@ -75,14 +75,26 @@ info('Filtering proper nouns')
 lemmas_to_senses_filtered = {}
 for lemma_id, sense_ids in lemmas_to_senses.items():
     word = lemma_id.split(':')[0]
+
+    # Check that at least one sense in not an instance_hypernym
+    one_not_instance_hypernym = False
+    one_lowercased = False
     for sense_id in sense_ids:
         wn_lemma = safe_lemma_from_key(word, sense_id)
         synset = wn_lemma.synset()
         instance_hypernyms = synset.instance_hypernyms()
         if len(instance_hypernyms) == 0:
-            # Add it
+            one_not_instance_hypernym = True
+        form = wn_lemma.name()
+        if form == form.lower():
+            one_lowercased = True
+
+        # Add it
+        if one_lowercased and one_not_instance_hypernym:
             lemmas_to_senses_filtered[lemma_id] = sense_ids
             break
+
+
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered
 

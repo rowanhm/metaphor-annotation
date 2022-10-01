@@ -151,8 +151,8 @@ class Manager {
 
 function start() {
     let rend = new Manager();
-    //rend.login_screen()
-    rend.login('rh635@cam.ac.uk', 'metaphor', 'noun011')
+    rend.login_screen()
+    //rend.login('rh635@cam.ac.uk', 'metaphor', 'noun011')
 }
 
 window.start = start;
