@@ -9,6 +9,7 @@ export class Sense {
 
         if (sense !== null) {
             this.lemma = sense.lemma
+            this.known = sense.known
             this.new_sense_id = sense.new_sense_id
             this.name_cell = sense.name_cell
             this.label_selector_cell = sense.label_selector_cell
@@ -76,6 +77,7 @@ export class Sense {
         this.definition = new WordNetDefinition(lemma, wordnet_sense_id)
         this.is_mixed = false
         this.is_ghost = false
+        this.known = true
         // Only literal half will be created this ways -- other initialised as met
         this.label_options = ['Literal', 'Related', 'Metaphorical']
         this.build_cells()
@@ -89,6 +91,7 @@ export class Sense {
         this.label_options = ['Literal' , 'Related']
         this.is_mixed = false
         this.is_ghost = true
+        this.known = true
         this.build_cells()
     }
 
@@ -112,6 +115,23 @@ export class Sense {
         } else {
             this.name_cell.style.color = 'red'
         }
+
+        let known = document.createElement('nobr')
+        known.style.fontSize = '80%'
+        known.innerHTML = 'known? '
+        let checkbox = document.createElement('input')
+        checkbox.type = 'checkbox'
+        if (this.known) {
+            checkbox.checked = true
+        }
+        known.appendChild(checkbox)
+        known.style.color = 'grey'
+        let that = this
+        known.onclick = function () {
+            that.known = !that.known
+            that.lemma.update_word_known()
+        }
+        this.name_cell.appendChild(known)
     }
 
     fill_tool_cell() {
@@ -238,6 +258,7 @@ export class Sense {
 
     get_data() {
         let sense_data = {}
+        sense_data['known'] = this.known
         sense_data['mixed'] = this.is_mixed
         sense_data['ghost'] = this.is_ghost
         sense_data['label'] = this.get_label()

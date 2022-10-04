@@ -33,15 +33,39 @@ export class Screen {
         // Adding word knowledge options
         let title_row = document.createElement("tr")
         let title_cell = document.createElement('td')
-        title_cell.style.fontSize = '150%'
+        //title_cell.style.fontSize = '150%'
         title_cell.style.padding = '15px'
         title_cell.colSpan= '6'
         title_cell.style.textAlign = 'center'
 
         let title = document.createElement("b")
+        title.style.fontSize = '150%'
         title.innerHTML = this.lemma.word
         title_cell.appendChild(title)
-        title_cell.innerHTML += ' (' + this.lemma.pos + ')'
+
+        let pos = document.createElement("span")
+        pos.style.fontSize = '150%'
+        pos.innerHTML = ' (' + this.lemma.pos + ')'
+        title_cell.appendChild(pos)
+
+        let known = document.createElement('span')
+        known.innerHTML = '<br>known? '
+        known.style.fontSize = '80%'
+        this.known_box = document.createElement('input')
+        this.known_box.type = 'checkbox'
+        this.known_box.checked = true
+        known.appendChild(this.known_box)
+        known.style.color = 'grey'
+
+        this.known_box.onclick = function () {
+            if (that.known_box.checked === false) {
+                // If it has been set to false
+                that.lemma.make_all_senses_unknown()
+            }
+        }
+
+        title_cell.appendChild(known)
+
         title_row.appendChild(title_cell)
 
         header.appendChild(title_row)
@@ -65,7 +89,7 @@ export class Screen {
         console.log(`Adding footer`)
         let footer = document.createElement('tfoot')
 
-        let word_knowledge_row = document.createElement("tr")
+        /* let word_knowledge_row = document.createElement("tr")
         footer.appendChild(word_knowledge_row)
         let word_knowledge_cell = document.createElement("td")
         word_knowledge_row.appendChild(word_knowledge_cell)
@@ -101,10 +125,11 @@ export class Screen {
                 input.checked = true
             }
             index++
-        }
+        } */
 
         let footer_row = document.createElement("tr")
         footer_row.id = 'footer'
+        footer_row.style.borderTop = '2px solid black'
         footer.appendChild(footer_row)
         table.appendChild(footer)
 
@@ -217,7 +242,7 @@ export class Screen {
         }
 
         const return_data = this.lemma.get_data()
-        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data, this.word_knowledge).then(() => {
+        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data, this.known_box.checked).then(() => {
 
             // Extract features
             let feature_frequencies = this.manager.datastore.feature_frequencies

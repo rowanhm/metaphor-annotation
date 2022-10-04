@@ -33,6 +33,29 @@ export class Lemma {
         this.screen.logs.log('lemma_initialised', '', '')
     }
 
+    update_word_known() {
+        let sense_known = false
+        for (const sense of this.all_senses()){
+            if (sense.known) {
+                sense_known = true
+                break
+            }
+        }
+        if (sense_known) {
+            // Set the word to known
+            if (this.screen.known_box.checked === false) {
+                this.screen.known_box.checked = true
+            }
+        }
+    }
+
+    make_all_senses_unknown() {
+        for (const sense of this.all_senses()){
+            sense.known = false
+        }
+        this.refresh()
+    }
+
     is_stable() {
         let stable = true
         for (const sense of this.all_senses()) {
