@@ -2,8 +2,7 @@ import json
 from collections import defaultdict
 
 from backend.common.common import open_pickle, info
-from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, \
-    queues_js_file, related_lemmas_file
+from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, queues_js_file
 
 info('Loading')
 lemma_to_senses = open_pickle(lemmas_to_senses_py_file)

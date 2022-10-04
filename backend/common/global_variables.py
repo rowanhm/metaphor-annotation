@@ -9,12 +9,12 @@ raw_data_dir = data_dir + 'raw/'
 extracted_data_dir = data_dir + 'extracted/'
 
 lemmas_to_senses_py_file = raw_data_dir + 'lemmas_to_senses.pkl'
+word_frequencies_file = raw_data_dir + 'wordFrequency.csv'
 concepts_to_definitions_py_file = raw_data_dir + 'concepts_to_definitions.pkl'
 senses_to_info_py_file = raw_data_dir + 'senses_to_info.pkl'
 concepts_to_img_py_file = raw_data_dir + 'concepts_to_images.pkl'
 example_sentences_file_princeton = raw_data_dir + 'example_sentences_princeton.pkl'  # list of annotated_sentence
 whitelist_vocab_file = raw_data_dir + 'google-10000-english-usa.txt'
-related_lemmas_file = raw_data_dir + 'related_lemmas.pkl'
 
 lemmas_to_senses_js_file = extracted_data_dir + 'lemmas_to_senses.json'
 concepts_to_definitions_js_file = extracted_data_dir + 'concepts_to_definitions.json'

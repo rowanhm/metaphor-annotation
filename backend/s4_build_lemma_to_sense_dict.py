@@ -1,14 +1,13 @@
 from collections import defaultdict
 from nltk.corpus import wordnet as wn
 
-from backend.common.common import info, save_pickle, safe_lemma_from_key, read_text
-from backend.common.global_variables import lemmas_to_senses_py_file, related_lemmas_file, pos_map, \
-    whitelist_vocab_file, MIN_SENSES, MAX_SENSES
+from backend.common.common import info, save_pickle, safe_lemma_from_key, read_text, open_dict_csv
+from backend.common.global_variables import lemmas_to_senses_py_file, pos_map, \
+    whitelist_vocab_file, MIN_SENSES, MAX_SENSES, word_frequencies_file
 
 assert wn.get_version() == '3.0'
 
 info('Extracting')
-related_lemmas = defaultdict(set)  # word/index -> pos
 lemmas_to_senses = defaultdict(set)
 for synset in wn.all_synsets():
     pos = pos_map[synset.pos()]
@@ -19,7 +18,6 @@ for synset in wn.all_synsets():
         index = 1
 
         lemmas_to_senses[f'{wordform.lower()}:{pos}:{index}'].add(sense_id)
-        related_lemmas[(wordform.lower(), str(index))].add(pos)
 
 info('Filtering monosemes')
 lemmas_to_senses_filtered = {}
@@ -29,7 +27,24 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered
 
-info('Filtering derivationally related forms')
+info('Filtering derivationally related forms and infrequent')
+# Reformatting frequencies
+frequency_data = open_dict_csv(word_frequencies_file)
+frequency_map = defaultdict(int)
+for entry in frequency_data:
+    pos = entry['PoS']
+    new_pos = None
+    if pos == 'j':
+        new_pos = 'adj'
+    elif pos == 'n':
+        new_pos = 'noun'
+    elif pos == 'v':
+        new_pos = 'verb'
+    elif pos == 'r':
+        new_pos = 'adv'
+    if new_pos is not None:
+        frequency_map[(entry['lemma'], new_pos)] += int(entry['freq'])
+
 senses_to_lemmas = {}
 for lemma, senses in lemmas_to_senses.items():
     for sense in senses:
@@ -39,27 +54,46 @@ lemmas_to_senses_filtered = {}
 for lemma_id, sense_ids in lemmas_to_senses.items():
     word, pos, index = lemma_id.split(':')
 
+    if frequency_map[(word, pos)] == 0:
+        continue
+
+    # DFS to find all related lemma
     related_forms = set()
-    for related_pos in related_lemmas[(word, index)]:
-        if related_pos != pos:
-            if f'{word}:{related_pos}:{index}' in lemmas_to_senses.keys():  # If it isn't it has already been filtered
-                related_forms.add(f'{word}:{related_pos}:{index}')
+    sense_queue = list(sense_ids)
+    seen_senses = set()
+    while len(sense_queue) > 0:
 
-    for sense_id in sense_ids:
-        # Get sense object
+        sense_id = sense_queue.pop()
+        assert (sense_id not in seen_senses) and (sense_id not in sense_queue)
+
+        # Add this form
         sense_obj = safe_lemma_from_key(word, sense_id)
+        sense_key = sense_obj.key()
+        if sense_key in senses_to_lemmas.keys():  # If it isn't it has already been filtered
+            related_forms.add(senses_to_lemmas[sense_key])
 
+        # Enqueue its decendents
         related_form_objs = sense_obj.derivationally_related_forms()
         for related_form_obj in related_form_objs:
-            # Get the lemma it is a part of
             related_form_key = related_form_obj.key()
-            if related_form_key in senses_to_lemmas.keys():  # If it isn't it has already been filtered
-                related_forms.add(senses_to_lemmas[related_form_key])
+            if (related_form_key not in seen_senses) and (related_form_key not in sense_queue):
+                sense_queue.append(related_form_key)
 
+        seen_senses.add(sense_id)
+
+    # Filter if any related form matches criteria
     skip = False
     for related_lemma in related_forms:
+        if related_lemma == lemma_id:
+            continue
+
         # Skip this lemma if a related lemma has more senses
-        if len(lemmas_to_senses[related_lemma]) > len(sense_ids):
+        # if len(lemmas_to_senses[related_lemma]) > len(sense_ids):
+        #     skip = True
+        #     break
+        # Skip this lemma if it is not the most frequent
+        related_name, related_pos, _ = related_lemma.split(':')
+        if frequency_map[(related_name, related_pos)] > frequency_map[(word, pos)]:
             skip = True
             break
 
@@ -115,15 +149,15 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered
 
-WORD_LIST = set(read_text(whitelist_vocab_file))
-info(f"Filtering only {len(WORD_LIST)} whitelisted words")
-lemmas_to_senses_filtered = {}
-for lemma_id, sense_ids in lemmas_to_senses.items():
-    word = lemma_id.split(':')[0]
-    if word in WORD_LIST:
-        lemmas_to_senses_filtered[lemma_id] = sense_ids
-info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
-lemmas_to_senses = lemmas_to_senses_filtered
+# WORD_LIST = set(read_text(whitelist_vocab_file))
+# info(f"Filtering only {len(WORD_LIST)} whitelisted words")
+# lemmas_to_senses_filtered = {}
+# for lemma_id, sense_ids in lemmas_to_senses.items():
+#     word = lemma_id.split(':')[0]
+#     if word in WORD_LIST:
+#         lemmas_to_senses_filtered[lemma_id] = sense_ids
+# info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+# lemmas_to_senses = lemmas_to_senses_filtered
 
 info('Ordering')
 lemmas_to_senses_ordered = {}
@@ -141,4 +175,3 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
 
 info('Saving')
 save_pickle(lemmas_to_senses_py_file, lemmas_to_senses_ordered)
-save_pickle(related_lemmas_file, related_lemmas)
