@@ -72,7 +72,7 @@ export class Screen {
 
         let header_row = document.createElement("tr")
         header_row.style.borderTop = '2px solid black'
-        const headers = ['ID', 'Definition', 'Label', 'Relation', 'Features', 'Tools'] // 'Image'
+        const headers = ['ID', 'Definition', 'Label', 'Connects&nbsp;To', 'Features', 'Tools'] // 'Image'
         for (const header of headers) {
             let cell = make_empty_cell()
             cell.innerHTML = '<b>' + header + '</b>'

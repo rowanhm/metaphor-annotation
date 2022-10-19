@@ -10,10 +10,16 @@ export class RelatedSense extends LiteralSense {
             this.resembles = sense.resembles
         }
         this.label = 'Related'
+        this.systematic = null
     }
 
     set_colour() {
         this.row.style.backgroundColor = '#E5FFD9'
+    }
+
+    get_systematic() {
+        this.sanify()
+        return this.systematic
     }
 
     is_stable() {
@@ -21,6 +27,9 @@ export class RelatedSense extends LiteralSense {
             return false
         }
         if (this.get_resembles() === null) {
+            return false
+        }
+        if (this.get_systematic() === null) {
             return false
         }
         return true
@@ -43,6 +52,9 @@ export class RelatedSense extends LiteralSense {
                 }
             }
 
+            if (this.resembles === null) {
+                this.systematic = null
+            }
             this.insane = false
         }
     }
@@ -56,6 +68,15 @@ export class RelatedSense extends LiteralSense {
     set_resembles(sense_id) {
         if (this.resembles !== sense_id) {
             this.resembles = sense_id
+            this.systematic = null
+            this.insane = true
+            this.lemma.refresh()
+        }
+    }
+
+    set_systematic(bool) {
+        if (bool !== this.systematic) {
+            this.systematic = bool
             this.insane = true
             this.lemma.refresh()
         }
@@ -64,6 +85,7 @@ export class RelatedSense extends LiteralSense {
     get_data() {
         let sense_data = super.get_data()
         sense_data['related_to'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
+        sense_data['systematic_relation'] = this.get_systematic()
         return sense_data
     }
 
@@ -79,7 +101,7 @@ export class RelatedSense extends LiteralSense {
         this.relation_cell.innerHTML = ''
 
         let resemblance_cell = document.createElement('nobr')
-        resemblance_cell.innerHTML = 'Connects to '
+        // resemblance_cell.innerHTML = 'Connects to '
 
         let select_resemblance = document.createElement("select");
         select_resemblance.id = `${this.new_sense_id}:resemblance_select`
@@ -125,5 +147,42 @@ export class RelatedSense extends LiteralSense {
 
         resemblance_cell.appendChild(select_resemblance)
         this.relation_cell.appendChild(resemblance_cell)
+        this.relation_cell.appendChild(document.createElement('br'))
+
+        const systematicity_name = `${this.new_sense_id}:systematicity`
+
+        // Add ad-hoc vs. systematic choice
+        let systematicity = document.createElement('span')
+        for (const [option, bool] of [['Systematic', true], ['Ad-hoc', false]]) {
+
+            const name = `${systematicity_name}:${option}`
+
+            let line = document.createElement('nobr')
+
+            // Select box
+            let checkbox = document.createElement('input')
+            checkbox.type = 'radio'
+            checkbox.name = systematicity_name
+            checkbox.id = name
+            if (this.get_systematic() === bool) {
+                checkbox.checked = true
+            }
+            checkbox.onclick = function () {
+                that.set_systematic(bool)
+            }
+            line.appendChild(checkbox)
+
+            // Label
+            let label = document.createElement("label");
+            label.htmlFor = name
+            label.innerHTML = option
+            line.appendChild(label)
+
+            // Linebreak
+            line.appendChild(document.createElement("br"))
+
+            systematicity.appendChild(line)
+        }
+        this.relation_cell.appendChild(systematicity)
     }
 }

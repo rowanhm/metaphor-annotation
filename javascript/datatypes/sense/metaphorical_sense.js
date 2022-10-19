@@ -141,7 +141,7 @@ export class MetaphoricalSense extends Sense {
         this.relation_cell.innerHTML = ''
 
         let resemblance_cell = document.createElement('nobr')
-        resemblance_cell.innerHTML = 'Connects to '
+        //resemblance_cell.innerHTML = 'Connects to '
 
         let select_resemblance = document.createElement("select");
         select_resemblance.id = `${this.new_sense_id}:resemblance_select`

@@ -77,7 +77,7 @@ export class LiteralSense extends Sense {
     }
 
     fill_relation_cell() {
-        this.relation_cell.innerHTML = ''
+        this.relation_cell.innerHTML = 'N/A'
     }
 
     get_data() {
