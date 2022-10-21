@@ -200,7 +200,13 @@ export class Sense {
 
                 let label = document.createElement("label");
                 label.htmlFor = name
-                label.innerHTML += option
+                if (option === 'Literal') {
+                    label.innerHTML += 'Core'
+                } else if (option === 'Related') {
+                    label.innerHTML += 'Association'
+                } else if (option === 'Metaphorical') {
+                    label.innerHTML += 'Metaphor'
+                }
 
                 if (option === this.get_label()) {
                     input.checked = true

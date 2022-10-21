@@ -149,40 +149,44 @@ export class RelatedSense extends LiteralSense {
         this.relation_cell.appendChild(resemblance_cell)
         this.relation_cell.appendChild(document.createElement('br'))
 
-        const systematicity_name = `${this.new_sense_id}:systematicity`
-
         // Add ad-hoc vs. systematic choice
-        let systematicity = document.createElement('span')
-        for (const [option, bool] of [['Systematic', true], ['Ad-hoc', false]]) {
 
-            const name = `${systematicity_name}:${option}`
+        if (this.get_resembles() !== null) {
 
-            let line = document.createElement('nobr')
+            const systematicity_name = `${this.new_sense_id}:systematicity`
 
-            // Select box
-            let checkbox = document.createElement('input')
-            checkbox.type = 'radio'
-            checkbox.name = systematicity_name
-            checkbox.id = name
-            if (this.get_systematic() === bool) {
-                checkbox.checked = true
+            let systematicity = document.createElement('span')
+            for (const [option, bool] of [['Regular', true], ['Irregular', false]]) {
+
+                const name = `${systematicity_name}:${option}`
+
+                let line = document.createElement('nobr')
+
+                // Select box
+                let checkbox = document.createElement('input')
+                checkbox.type = 'radio'
+                checkbox.name = systematicity_name
+                checkbox.id = name
+                if (this.get_systematic() === bool) {
+                    checkbox.checked = true
+                }
+                checkbox.onclick = function () {
+                    that.set_systematic(bool)
+                }
+                line.appendChild(checkbox)
+
+                // Label
+                let label = document.createElement("label");
+                label.htmlFor = name
+                label.innerHTML = option
+                line.appendChild(label)
+
+                // Linebreak
+                line.appendChild(document.createElement("br"))
+
+                systematicity.appendChild(line)
             }
-            checkbox.onclick = function () {
-                that.set_systematic(bool)
-            }
-            line.appendChild(checkbox)
-
-            // Label
-            let label = document.createElement("label");
-            label.htmlFor = name
-            label.innerHTML = option
-            line.appendChild(label)
-
-            // Linebreak
-            line.appendChild(document.createElement("br"))
-
-            systematicity.appendChild(line)
+            this.relation_cell.appendChild(systematicity)
         }
-        this.relation_cell.appendChild(systematicity)
     }
 }
