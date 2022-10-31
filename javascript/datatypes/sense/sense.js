@@ -206,6 +206,8 @@ export class Sense {
                     label.innerHTML += 'Association'
                 } else if (option === 'Metaphorical') {
                     label.innerHTML += 'Metaphor'
+                } else {
+                    console.error('Invalid label')
                 }
 
                 if (option === this.get_label()) {

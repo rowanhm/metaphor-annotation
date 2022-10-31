@@ -161,7 +161,7 @@ export class Screen {
             that.lemma.screen.logs.log('new_ghost_sense', '', '')
             that.lemma.new_ghost_sense()
         }
-        new_sense.innerHTML = 'New ghost sense'
+        new_sense.innerHTML = 'New virtual sense'
 
         let open_wordnet = document.createElement("button")
         open_wordnet.type = 'button'
@@ -236,7 +236,7 @@ export class Screen {
             this.warning_cell.innerHTML += '* All metaphorical senses have a feature transformation<br>'
             this.warning_cell.innerHTML += "* No sense features are blank<br>"
             this.warning_cell.innerHTML += "* No sense features contain illegal characters ('.', '/', '#', '$', '[', ']')<br>"
-            this.warning_cell.innerHTML += '* All ghost sense have a definition<br>'
+            this.warning_cell.innerHTML += '* All virtual sense have a definition<br>'
             this.warning_cell.innerHTML += '* You have labelled how well you know this word'
             return false
         }

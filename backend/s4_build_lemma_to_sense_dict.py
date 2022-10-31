@@ -1,9 +1,8 @@
 from collections import defaultdict
 from nltk.corpus import wordnet as wn
 
-from backend.common.common import info, save_pickle, safe_lemma_from_key, read_text, open_dict_csv
-from backend.common.global_variables import lemmas_to_senses_py_file, pos_map, \
-    whitelist_vocab_file, MIN_SENSES, MAX_SENSES, word_frequencies_file
+from backend.common.common import info, save_pickle, safe_lemma_from_key, open_dict_csv
+from backend.common.global_variables import lemmas_to_senses_py_file, pos_map, word_frequencies_file
 
 assert wn.get_version() == '3.0'
 
@@ -137,14 +136,6 @@ lemmas_to_senses_filtered = {}
 for lemma_id, sense_ids in lemmas_to_senses.items():
     word = lemma_id.split(':')[0]
     if len(word) > 1:
-        lemmas_to_senses_filtered[lemma_id] = sense_ids
-info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
-lemmas_to_senses = lemmas_to_senses_filtered
-
-info('Filtering wordforms with incorrect number of senses')
-lemmas_to_senses_filtered = {}
-for lemma_id, sense_ids in lemmas_to_senses.items():
-    if MIN_SENSES <= len(sense_ids) <= MAX_SENSES:
         lemmas_to_senses_filtered[lemma_id] = sense_ids
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered

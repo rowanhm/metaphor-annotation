@@ -2,11 +2,20 @@ import json
 from collections import defaultdict
 
 from backend.common.common import open_pickle, info
-from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, queues_js_file
+from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, queues_js_file, MIN_SENSES, \
+    MAX_SENSES
 
 info('Loading')
 lemma_to_senses = open_pickle(lemmas_to_senses_py_file)
 info(f'{len(lemma_to_senses)} lemmas total')
+
+info('Filtering wordforms with incorrect number of senses')
+lemmas_to_senses_filtered = {}
+for lemma_id, sense_ids in lemma_to_senses.items():
+    if MIN_SENSES <= len(sense_ids) <= MAX_SENSES:
+        lemmas_to_senses_filtered[lemma_id] = sense_ids
+info(f'{len(lemma_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
+lemma_to_senses = lemmas_to_senses_filtered
 
 info('Splitting by POS')
 pos_dict = defaultdict(set)
