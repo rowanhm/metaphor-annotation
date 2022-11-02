@@ -106,3 +106,9 @@ input[type=submit] {
     background-color: DodgerBlue !important;
     color: #ffffff;
 }
+
+/*
+body {
+    transform: scale(0.8);
+    transform-origin: 0 0;
+}*/

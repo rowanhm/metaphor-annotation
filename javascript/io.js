@@ -10,9 +10,13 @@ export async function load_json(file) {
     return await response.json();
 }
 
-const firebaseConfig = {
+/*const firebaseConfig = {
     databaseURL: "https://metaphor-annotation-default-rtdb.firebaseio.com",
     apiKey: 'AIzaSyDkBXRJR3LdBXY7oVS8JP5vT8dsYywAHJk'
+};*/
+const firebaseConfig = {
+    databaseURL: "https://metaphor-annotation-uk-default-rtdb.europe-west1.firebasedatabase.app",
+    apiKey: 'AIzaSyD4J-vJ5Pvx1whT59SU7i-9crXa2KO6ddM'
 };
 
 // Initialize Firebase

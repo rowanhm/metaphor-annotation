@@ -238,23 +238,16 @@ export class Screen {
         return false
     }
 
-    is_stable() {
-        return (this.lemma.is_stable() && (this.word_knowledge !== null))
-    }
-
     submit_annotation() {
 
         // Extract data
-        if (!this.is_stable()) {
-            this.warning_cell.innerHTML = 'Cannot submit (info not complete). Senses which are missing info have their IDs in red (left column). Please make sure:<br>'
-            this.warning_cell.innerHTML += '* All senses are labelled metaphorical or literal<br>'
-            this.warning_cell.innerHTML += '* All literal senses are in a group<br>'
-            this.warning_cell.innerHTML += '* All metaphorical senses are set to resemble a literal sense<br>'
-            this.warning_cell.innerHTML += '* All metaphorical senses have a feature transformation<br>'
-            this.warning_cell.innerHTML += "* No sense features are blank<br>"
-            this.warning_cell.innerHTML += "* No sense features contain illegal characters ('.', '/', '#', '$', '[', ']')<br>"
-            this.warning_cell.innerHTML += '* All virtual sense have a definition<br>'
-            this.warning_cell.innerHTML += '* You have labelled how well you know this word'
+        let issues = this.lemma.issues()
+        if (issues.is_failed()) {
+            this.warning_cell.innerHTML = '<b>Cannot submit:</b>\n<ul>'
+            for (const issue of issues.get_issues()) {
+                this.warning_cell.innerHTML += `<li>${issue}</li>\n`
+            }
+            this.warning_cell.innerHTML+='</ul>'
             return false
         }
 

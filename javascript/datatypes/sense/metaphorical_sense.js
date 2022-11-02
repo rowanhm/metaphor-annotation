@@ -104,7 +104,7 @@ export class MetaphoricalSense extends Sense {
                         }
                     } else {
                         // Is contained
-                        if (this.feature_labels[feature_id] !== 'mod') {
+                        if (this.feature_labels[feature_id] !== 'modified') {
                             if (feature_id in this.feature_transformation_inputs) {
                                 delete this.feature_transformation_inputs[feature_id]
                             }
@@ -157,7 +157,7 @@ export class MetaphoricalSense extends Sense {
         select_resemblance.id = `${this.new_sense_id}:resemblance_select`
         let that = this
         select_resemblance.onchange = function(){
-            that.lemma.screen.logs.log('set_resembles', that.backend_sense_id, that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).backend_sense_id)
+            that.lemma.screen.logs.log('connect', that.get_backend_sense_id(), that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).get_backend_sense_id())
             that.update_resembles()
         }
 
@@ -238,12 +238,12 @@ export class MetaphoricalSense extends Sense {
                     // no_break.innerHTML = `This thing ${feature_text}?`
 
                     no_break.innerHTML = `This ${feature_text}`
-                    if (feature_label === 'yes') {
+                    if (feature_label === 'kept') {
                         no_break.style.color = 'green'
-                    } else if (feature_label === 'no') {
+                    } else if (feature_label === 'lost') {
                         no_break.innerHTML = `<s>This ${feature_text}</s>`
                         no_break.style.color = 'red'
-                    } else if (feature_label === 'mod') {
+                    } else if (feature_label === 'modified') {
                         no_break.style.color = '#F17400'
                     }
 
@@ -258,7 +258,7 @@ export class MetaphoricalSense extends Sense {
 
                     const radio_name = `${this.new_sense_id}:feature_select_${feature_id}`
                     let that = this
-                    for (const option of ['Yes', 'No', 'Mod']) {
+                    for (const option of ['Kept', 'Lost', 'Modified']) {
                         const name = `${radio_name}:${option.toLowerCase()}`
 
                         let input = document.createElement("input");
@@ -266,24 +266,18 @@ export class MetaphoricalSense extends Sense {
                         input.name = radio_name
                         input.id = name
                         input.onclick = function () {
-                            that.lemma.screen.logs.log(`label_feature(${option.toLowerCase()})`, that.backend_sense_id, `feature_${feature_id}`)
+                            that.lemma.screen.logs.log(`label_feature_${option.toLowerCase()}`, that.get_backend_sense_id(), `feature_${feature_id}`)
                             that.set_feature_label(feature_id, option.toLowerCase())
                         }
                         option_list.appendChild(input)
 
                         let label = document.createElement("label");
                         label.htmlFor = name
-                        if (option === 'Yes') {
-                            label.innerHTML += 'Kept'
-                        } else if (option === 'No') {
-                            label.innerHTML += 'Lost'
-                        } else if (option === 'Mod') {
-                            label.innerHTML += 'Modified'
-                        }
+                        label.innerHTML += option
 
                         if (option.toLowerCase() === feature_label){
                             input.checked = true
-                        } else if (feature_label === 'yes' || feature_label === 'no' || feature_label === 'mod') {
+                        } else if (feature_label === 'kept' || feature_label === 'lost' || feature_label === 'modified') {
                             label.style.opacity = '0.5'
                         }
 
@@ -292,7 +286,7 @@ export class MetaphoricalSense extends Sense {
                     }
 
                     // Add transformation row
-                    if (feature_label === 'mod') {
+                    if (feature_label === 'modified') {
                         let modification_row = document.createElement('tr')
                         let modification_cell = document.createElement('td')
                         modification_cell.style.textAlign = 'left'
@@ -304,7 +298,7 @@ export class MetaphoricalSense extends Sense {
                         modification_cell.colSpan = '2'
 
                         modification_cell.appendChild(no_break)
-                        no_break.innerHTML = '=> This '//'=> This thing '
+                        no_break.innerHTML = '&nbsp;&#8627; This '//'=> This thing '
 
                         let feature_transformation_wrapper = document.createElement('div')
                         feature_transformation_wrapper.className = 'autocomplete'
@@ -327,47 +321,43 @@ export class MetaphoricalSense extends Sense {
 
     get_data() {
         let sense_data = super.get_data()
-        sense_data['metaphor_resembles'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
+        sense_data['connected_to'] = this.lemma.get_sense(this.get_resembles()).get_backend_sense_id()
         sense_data['feature_map'] = this.get_feature_labels()
         sense_data['feature_modifications'] = this.get_transformations()
         return sense_data
     }
 
-    is_stable() {
-        console.log('Checking stability of metaphorical sense')
-        if (!super.is_stable()) {
-            return false
-        }
+    issues() {
+        let issues = super.issues()
         if (this.get_resembles() === null) {
-            return false
+            issues.add_issue(`${this.get_outward_facing_id()} is not connected to another sense.`)
         }
         let found_neg_feature = false
         let found_pos_feature = false
         let found_modified_feature = false
         for (const [feature_id, feature_label] of Object.entries(this.get_feature_labels())) {
-            if (feature_label === 'yes') {
+            if (feature_label === 'kept') {
                 found_pos_feature = true
-            } else if (feature_label === 'no') {
+            } else if (feature_label === 'lost') {
                 found_neg_feature = true
-            } else if (feature_label === 'mod') {
+            } else if (feature_label === 'modified') {
                 if (!(is_valid_feature(this.get_transformation_input(feature_id).value))) {
-                    return false
+                    issues.add_issue(`${this.get_outward_facing_id()} has an invalid feature modification (features must not be blank and must not contain '.', '#', '$', '/', '[', or ']').`)
                 }
                 if (this.get_transformation_input(feature_id).value === this.lemma.get_sense(this.get_resembles()).get_feature(feature_id)) {
-                    return false
+                    issues.add_issue(`${this.get_outward_facing_id()} has an invalid feature modification (modified features must be different).`)
                 }
                 found_modified_feature = true
             } else {
                 console.log('Metaphorical sense missing feature label')
                 // feature is null
-                return false
+                issues.add_issue(`${this.get_outward_facing_id()} has features which are unlabelled (kept/lost/modified).`)
             }
         }
-        if ((found_neg_feature && found_pos_feature) || found_modified_feature) {
-            return true
-        } else {
-            return false
+        if (!((found_neg_feature && found_pos_feature) || found_modified_feature)) {
+            issues.add_issue(`${this.get_outward_facing_id()} does not have a sufficient feature transformation (it must have either a modified feature, or a kept feature and a lost feature).`)
         }
+        return issues
     }
 
     get_features() {
@@ -377,10 +367,10 @@ export class MetaphoricalSense extends Sense {
         if (this.get_resembles() !== null) {
             for (const [feature_id, feature_text] of Object.entries(this.lemma.get_sense(this.get_resembles()).get_features())) {
                 let label = this.get_feature_label(feature_id)
-                if (label === 'yes') {
+                if (label === 'kept') {
                     features[feature_id] = feature_text
-                } else if (label === 'mod') {
-                    features[`${feature_id}+M`] = this.get_transformation_input(feature_id).value
+                } else if (label === 'modified') {
+                    features[`${feature_id}(M)`] = this.get_transformation_input(feature_id).value
                 }
             }
         }

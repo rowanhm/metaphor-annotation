@@ -1,4 +1,5 @@
 import {make_empty_cell} from "../../utilities.js";
+import {Issues} from "../issues.js";
 
 export class WordNetDefinition {
 
@@ -16,7 +17,8 @@ export class WordNetDefinition {
 
     make_definition_cell() {
         this.definition_cell = make_empty_cell()
-        let definition = this.create_definition(this.original_sense_id)
+        this.definition_cell.style.minWidth = '15ch'
+        let definition = this.create_definition(this.original_sense_id, true)
         this.definition_cell.appendChild(definition)
     }
 
@@ -125,8 +127,8 @@ export class WordNetDefinition {
         return linked_text
     }
 
-    is_stable() {
-        return true
+    issues() {
+        return new Issues()
     }
 
 }

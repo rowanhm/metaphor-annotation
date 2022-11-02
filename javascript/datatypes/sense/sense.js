@@ -33,6 +33,23 @@ export class Sense {
         this.border_pattern = '1px solid black'
     }
 
+    reset_local_features() {
+        this.features_inputs = {}
+        this.features_index = 0
+        this.insane = true
+    }
+
+    get_backend_sense_id() {
+        if (this.is_mixed) {
+            if (this.get_label() !== 'Metaphorical') {
+                return `A_${this.backend_sense_id}`
+            } else {
+                return `B_${this.backend_sense_id}`
+            }
+        }
+        return this.backend_sense_id
+    }
+
     is_subcore() {
         this.sanify()
         return this.subcore
@@ -46,19 +63,17 @@ export class Sense {
         }
     }
 
-    is_stable() {
-        if (!this.definition.is_stable()) {
-            return false
-        }
+    issues() {
+        let issues = this.definition.issues()
         if (this.get_label() === null) {
-            return false
+            issues.add_issue(`${this.get_outward_facing_id()} is unlabelled.`)
         }
         for (const feature of this.get_feature_list()) {
             if (!(is_valid_feature(feature))) {
-                return false
+                issues.add_issue(`${this.get_outward_facing_id()} has an invalid feature (features must not be blank and must not contain '.', '#', '$', '/', '[', or ']').`)
             }
         }
-        return true
+        return issues
     }
 
     get_feature_list() {
@@ -154,8 +169,7 @@ export class Sense {
         this.is_ghost = false
         this.known = true
         this.subcore = false
-        this.features_inputs = {}
-        this.features_index = 0
+        this.reset_local_features()
         // Only literal half will be created this ways -- other initialised as met
         this.label_options = ['Literal', 'Related', 'Metaphorical']
         this.build_cells()
@@ -171,8 +185,7 @@ export class Sense {
         this.is_ghost = true
         this.known = true
         this.subcore = false
-        this.features_inputs = {}
-        this.features_index = 0
+        this.reset_local_features()
         this.build_cells()
     }
 
@@ -191,7 +204,7 @@ export class Sense {
 
     fill_name_cell() {
         this.name_cell.innerHTML = '<b>' + this.get_outward_facing_id() + '</b><br>'
-        if (this.is_stable()) {
+        if (!this.issues().is_failed()) {
             this.name_cell.style.color = 'green'
         } else {
             this.name_cell.style.color = 'red'
@@ -225,7 +238,7 @@ export class Sense {
             let delete_button = document.createElement("button")
             delete_button.type = 'button'
             delete_button.onclick = function () {
-                that.lemma.screen.logs.log(`delete_ghost_sense`, that.backend_sense_id, ``)
+                that.lemma.screen.logs.log(`delete_virtual_sense`, that.get_backend_sense_id(), ``)
                 that.lemma.delete_ghost_sense(that.new_sense_id)
             }
             delete_button.innerHTML = 'Delete'
@@ -237,7 +250,7 @@ export class Sense {
                 let split_button = document.createElement("button")
                 split_button.type = 'button'
                 split_button.onclick = function () {
-                    that.lemma.screen.logs.log(`split`, that.backend_sense_id, ``)
+                    that.lemma.screen.logs.log(`split`, that.get_backend_sense_id(), ``)
                     that.lemma.split_mixed_sense(that.new_sense_id)
                 }
                 split_button.innerHTML = 'Split'
@@ -250,7 +263,7 @@ export class Sense {
                     let remerge_button = document.createElement("button")
                     remerge_button.type = 'button'
                     remerge_button.onclick = function () {
-                        that.lemma.screen.logs.log(`remerge`, that.backend_sense_id, ``)
+                        that.lemma.screen.logs.log(`remerge`, that.get_backend_sense_id(), ``)
                         that.lemma.merge_mixed_sense(that.new_sense_id)
                     }
                     remerge_button.innerHTML = '<nobr>Re-merge</nobr>'
@@ -273,25 +286,28 @@ export class Sense {
                 input.type = "radio"
                 input.name = select_name
                 input.id = name
-                input.onclick = function () {
-                    that.lemma.screen.logs.log(option.toLowerCase(), that.backend_sense_id, '')
-                    that.lemma.set_label(that.new_sense_id, option.toLowerCase())
-                }
                 no_break.appendChild(input)
 
                 let label = document.createElement("label");
                 label.htmlFor = name
+                let option_text = ''
                 if (option === 'Literal') {
                     label.style.color = '#772206'
-                    label.innerHTML = 'Core'
+                    option_text = 'Core'
                 } else if (option === 'Related') {
                     label.style.color = '#D04C18'
-                    label.innerHTML = 'Association'
+                    option_text = 'Association'
                 } else if (option === 'Metaphorical') {
                     label.style.color = '#8F45A3'
-                    label.innerHTML = 'Metaphor'
+                    option_text = 'Metaphor'
                 } else {
                     console.error('Invalid label')
+                }
+                label.innerHTML = option_text
+
+                input.onclick = function () {
+                    that.lemma.screen.logs.log(option_text.toLowerCase(), that.get_backend_sense_id(), '')
+                    that.lemma.set_label(that.new_sense_id, option.toLowerCase())
                 }
 
                 if (option === this.get_label()) {
@@ -327,7 +343,13 @@ export class Sense {
                     // subcore_element.style.color = 'grey'
                     let that = this
                     subcore_element.onclick = function () {
-                        that.set_subcore(!that.is_subcore())
+                        let is_subcore = that.is_subcore()
+                        if (!is_subcore) {
+                            that.lemma.screen.logs.log(`promote_to_secondary_core`, that.get_backend_sense_id(), ``)
+                        } else {
+                            that.lemma.screen.logs.log(`demote_from_secondary_core`, that.get_backend_sense_id(), ``)
+                        }
+                        that.set_subcore(!is_subcore)
                     }
                     no_break.appendChild(subcore_element)
                 }
@@ -348,7 +370,6 @@ export class Sense {
 
     fill_features_cell() {
         this.feature_cell.innerHTML = ''
-        this.feature_cell.style.textAlign = 'right'
         let subtable = document.createElement('table')
         subtable = this.fill_features_table(subtable)
         this.feature_cell.appendChild(subtable)
@@ -379,7 +400,7 @@ export class Sense {
             let delete_button = document.createElement("button")
             delete_button.type = 'button'
             delete_button.onclick = function () {
-                that.lemma.screen.logs.log('delete_feature', that.backend_sense_id, `feature_${feature_id}`)
+                that.lemma.screen.logs.log('delete_feature', that.get_backend_sense_id(), `feature_${feature_id}`)
                 that.delete_feature(feature_id)
             }
             delete_button.innerHTML = '&minus;'
@@ -400,7 +421,7 @@ export class Sense {
         let create_button = document.createElement("button")
         create_button.type = 'button'
         create_button.onclick = function () {
-            that.lemma.screen.logs.log('new_feature', that.backend_sense_id, '')
+            that.lemma.screen.logs.log('new_feature', that.get_backend_sense_id(), '')
             that.add_feature()
         }
         create_button.innerHTML = '+'
@@ -444,13 +465,22 @@ export class Sense {
 
     get_data() {
         let sense_data = {}
-        sense_data['known'] = this.known
-        sense_data['mixed'] = this.is_mixed
-        sense_data['ghost'] = this.is_ghost
-        sense_data['label'] = this.get_label()
+        sense_data['is_known'] = this.known
+        sense_data['is_mixed'] = this.is_mixed
+        sense_data['is_virtual'] = this.is_ghost
+        let label = this.get_label()
+        if (label === 'Literal') {
+            label = 'core'
+        } else if (label === 'Related') {
+            label = 'association'
+        } else if (label === 'Metaphorical') {
+            label = 'metaphor'
+        }
+        sense_data['label'] = label
         if (this.definition instanceof CustomDefinition) {
             sense_data['definition'] = this.definition.get_definition()
         }
+        sense_data['features'] = this.get_features()
         return sense_data
     }
 

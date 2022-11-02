@@ -10,16 +10,14 @@ export class LiteralSense extends Sense {
     }
 
     set_colour() {
-        this.row.style.backgroundColor = '#F5E1DA'
+        this.row.style.backgroundColor = '#EEE6E4'
     }
 
     fill_relation_cell() {
-        this.relation_cell.innerHTML = 'N/A'
-    }
-
-    get_data() {
-        let sense_data = super.get_data()
-        sense_data['features'] = this.get_features()
-        return sense_data
+        this.relation_cell.innerHTML = ''
+        let span = document.createElement('span')
+        span.style.opacity = '0.5'
+        span.innerHTML = 'N/A'
+        this.relation_cell.appendChild(span)
     }
 }

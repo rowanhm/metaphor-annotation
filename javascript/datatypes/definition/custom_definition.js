@@ -1,4 +1,5 @@
 import {make_empty_cell} from "../../utilities.js";
+import {Issues} from "../issues.js";
 
 export class CustomDefinition {
 
@@ -24,11 +25,12 @@ export class CustomDefinition {
         this.image_cell = make_empty_cell()
     }
 
-    is_stable() {
+    issues() {
+        let issues = new Issues()
         const defn = this.get_definition()
         if (defn.length === 0) {
-            return false
+            issues.add_issue(`${this.sense.get_outward_facing_id()} does not have a definition.`)
         }
-        return true
+        return issues
     }
 }

@@ -15,7 +15,7 @@ export class RelatedSense extends LiteralSense {
     }
 
     set_colour() {
-        this.row.style.backgroundColor = '#FFEADE'
+        this.row.style.backgroundColor = '#FFF1DE'
     }
 
     get_systematic() {
@@ -23,17 +23,15 @@ export class RelatedSense extends LiteralSense {
         return this.systematic
     }
 
-    is_stable() {
-        if (!super.is_stable()) {
-            return false
-        }
+    issues() {
+        let issues = super.issues()
         if (this.get_resembles() === null) {
-            return false
+            issues.add_issue(`${this.get_outward_facing_id()} is not connected to another sense.`)
         }
         if (this.get_systematic() === null) {
-            return false
+            issues.add_issue(`${this.get_outward_facing_id()} is not labelled as regular or irregular.`)
         }
-        return true
+        return issues
     }
 
     sanify() {
@@ -85,8 +83,8 @@ export class RelatedSense extends LiteralSense {
 
     get_data() {
         let sense_data = super.get_data()
-        sense_data['related_to'] = this.lemma.get_sense(this.get_resembles()).backend_sense_id
-        sense_data['systematic_relation'] = this.get_systematic()
+        sense_data['connected_to'] = this.lemma.get_sense(this.get_resembles()).get_backend_sense_id()
+        sense_data['is_regular'] = this.get_systematic()
         return sense_data
     }
 
@@ -113,7 +111,7 @@ export class RelatedSense extends LiteralSense {
         select_resemblance.id = `${this.new_sense_id}:resemblance_select`
         let that = this
         select_resemblance.onchange = function(){
-            that.lemma.screen.logs.log('set_resembles', that.backend_sense_id, that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).backend_sense_id)
+            that.lemma.screen.logs.log('connect', that.get_backend_sense_id(), that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).get_backend_sense_id())
             that.update_resembles()
         }
 

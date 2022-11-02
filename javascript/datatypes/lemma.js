@@ -2,6 +2,7 @@ import {Sense} from "./sense/sense.js";
 import {MetaphoricalSense} from "./sense/metaphorical_sense.js";
 import {LiteralSense} from "./sense/literal_sense.js";
 import {RelatedSense} from "./sense/related_sense.js";
+import {Issues} from "./issues.js";
 
 export class Lemma {
 
@@ -56,14 +57,13 @@ export class Lemma {
         this.refresh()
     }
 
-    is_stable() {
-        let stable = true
+    issues() {
+        let issues = new Issues()
         for (const sense of this.all_senses()) {
-            if (!sense.is_stable()) {
-                stable = false
-            }
+            let sense_issues = sense.issues()
+            issues.merge_issues(sense_issues)
         }
-        return stable
+        return issues
     }
 
     get_next_new_sense_id() {
@@ -148,14 +148,16 @@ export class Lemma {
         lit_half.is_mixed = true
         lit_half.definition = sense.definition.copy()
         lit_half.label_options = ['Literal', 'Related']
+        lit_half.reset_local_features()
         lit_half.build_cells()
 
-        let met_half = new MetaphoricalSense(sense)
+        let met_half = new MetaphoricalSense(lit_half)
         met_half.new_sense_id = new_sense_id+'B'
         met_half.is_mixed = true
         met_half.definition = sense.definition.copy()
         met_half.label_options = ['Metaphorical']
         met_half.border_pattern = '1px dotted black'
+        met_half.reset_local_features()
         met_half.build_cells()
 
         this.new_id_to_sense.set(lit_half.new_sense_id, lit_half)
@@ -215,17 +217,8 @@ export class Lemma {
         let return_data = {};
 
         for (const sense of this.all_senses()) {
-            const sense_id = sense.backend_sense_id
-            let sense_data = sense.get_data()
-            if (sense.is_mixed) {
-                if (sense instanceof MetaphoricalSense) {
-                    return_data[sense_id]['metaphorical_half'] = sense_data
-                } else {
-                    // Related or literal
-                    return_data[sense_id]['literal_half'] = sense_data
-                }
-            }
-            return_data[sense_id] = sense_data
+            const sense_id = sense.get_backend_sense_id()
+            return_data[sense_id] = sense.get_data()
         }
         return return_data
     }
