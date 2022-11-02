@@ -138,7 +138,7 @@ export class MetaphoricalSense extends Sense {
     }
 
     set_colour() {
-        this.row.style.backgroundColor = '#F8D9FF'
+        this.row.style.backgroundColor = '#FBE8FF'
     }
 
     is_valid_connection(other_sense) {
@@ -203,6 +203,7 @@ export class MetaphoricalSense extends Sense {
         let instruction_row = document.createElement('tr')
         let instruction_cell = document.createElement('td')
         instruction_cell.colSpan = "2"
+        instruction_row.style.textAlign = 'left'
         let instruction_box = document.createElement('nobr')
         let instruction_text = document.createElement('i')
         instruction_text.innerHTML = text
@@ -216,12 +217,12 @@ export class MetaphoricalSense extends Sense {
         const resembles_sense = this.lemma.get_sense(this.get_resembles())
         if (this.get_resembles() === null) {
             // No resembled sense selected
-            subtable.appendChild(this.make_text_row('Select a resemblance to inherit its features'))
+            subtable.appendChild(this.make_text_row('Select which sense this connects to'))
         } else {
             const features = resembles_sense.get_features()
             if (Object.keys(features).length === 0) {
                 // No features
-                subtable.appendChild(this.make_text_row(`Add features to ${resembles_sense.get_outward_facing_id()} to get started`))
+                subtable.appendChild(this.make_text_row(`Add features to ${resembles_sense.get_outward_facing_id()}`))
             } else {
                 // Iterate through the shared features and the mapping
                 for (const [feature_id, feature_text] of Object.entries(features)) {
@@ -243,7 +244,7 @@ export class MetaphoricalSense extends Sense {
                         no_break.innerHTML = `<s>This ${feature_text}</s>`
                         no_break.style.color = 'red'
                     } else if (feature_label === 'mod') {
-                        no_break.style.color = 'orange'
+                        no_break.style.color = '#F17400'
                     }
 
                     text_cell.appendChild(no_break)
@@ -282,6 +283,8 @@ export class MetaphoricalSense extends Sense {
 
                         if (option.toLowerCase() === feature_label){
                             input.checked = true
+                        } else if (feature_label === 'yes' || feature_label === 'no' || feature_label === 'mod') {
+                            label.style.opacity = '0.5'
                         }
 
                         option_list.appendChild(label)
@@ -331,6 +334,7 @@ export class MetaphoricalSense extends Sense {
     }
 
     is_stable() {
+        console.log('Checking stability of metaphorical sense')
         if (!super.is_stable()) {
             return false
         }
@@ -354,6 +358,7 @@ export class MetaphoricalSense extends Sense {
                 }
                 found_modified_feature = true
             } else {
+                console.log('Metaphorical sense missing feature label')
                 // feature is null
                 return false
             }

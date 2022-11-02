@@ -96,7 +96,8 @@ export class Sense {
         this.features_index++
         this.insane = true
         this.lemma.refresh()
-        autocomplete(new_feature, this.lemma.datastore.feature_list)
+        // Add this line back for autocomplete:
+        // autocomplete(new_feature, this.lemma.datastore.feature_list)
     }
 
     delete_feature(feature_id) {
@@ -281,34 +282,46 @@ export class Sense {
                 let label = document.createElement("label");
                 label.htmlFor = name
                 if (option === 'Literal') {
-                    label.innerHTML += 'Core'
+                    label.style.color = '#772206'
+                    label.innerHTML = 'Core'
                 } else if (option === 'Related') {
-                    label.innerHTML += 'Association'
+                    label.style.color = '#D04C18'
+                    label.innerHTML = 'Association'
                 } else if (option === 'Metaphorical') {
-                    label.innerHTML += 'Metaphor'
+                    label.style.color = '#8F45A3'
+                    label.innerHTML = 'Metaphor'
                 } else {
                     console.error('Invalid label')
                 }
 
                 if (option === this.get_label()) {
                     input.checked = true
+                } else if (this.get_label() !== null) {
+                    // Something is selected that isn't this
+                    // label.innerHTML = '<s>' + label.innerHTML + '</s>'
+                    label.style.opacity = '0.5'
                 }
 
-                no_break.appendChild(label)
 
-                no_break.appendChild(document.createElement("br"))
-                this.label_selector_cell.appendChild(no_break)
+                no_break.appendChild(label)
 
                 if ((option === this.get_label()) && (option === "Metaphorical" || option === "Related")) {
 
                     // Add secondary core option
-                    let subcore_element = document.createElement('nobr')
-                    subcore_element.style.color = 'gray'
-                    subcore_element.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;+ core? '
+                    let subcore_element = document.createElement('span')
+                    let label = document.createElement("label");
+                    let subname = `${this.new_sense_id}:subcore`
+                    label.htmlFor = subname
+                    label.innerHTML = '&nbsp;+ core? '
+                    subcore_element.appendChild(label)
+
                     let checkbox = document.createElement('input')
                     checkbox.type = 'checkbox'
+                    checkbox.id = subname
                     if (this.is_subcore()) {
                         checkbox.checked = true
+                    } else {
+                        label.style.opacity = '0.5'
                     }
                     subcore_element.appendChild(checkbox)
                     // subcore_element.style.color = 'grey'
@@ -316,9 +329,12 @@ export class Sense {
                     subcore_element.onclick = function () {
                         that.set_subcore(!that.is_subcore())
                     }
-                    subcore_element.appendChild(document.createElement("br"))
-                    this.label_selector_cell.appendChild(subcore_element)
+                    no_break.appendChild(subcore_element)
                 }
+
+                no_break.appendChild(document.createElement("br"))
+                this.label_selector_cell.appendChild(no_break)
+
             }
         } else {
             this.label_selector_cell.innerHTML = this.label_options[0]
@@ -366,7 +382,7 @@ export class Sense {
                 that.lemma.screen.logs.log('delete_feature', that.backend_sense_id, `feature_${feature_id}`)
                 that.delete_feature(feature_id)
             }
-            delete_button.innerHTML = 'Delete'
+            delete_button.innerHTML = '&minus;'
             let space = document.createElement('span')
             space.innerHTML = ' '
             no_break.appendChild(space)
@@ -380,14 +396,14 @@ export class Sense {
         let add_row = document.createElement('tr')
         let add_cell = document.createElement('td')
         add_cell.colSpan = '2'
-        add_cell.style.textAlign = 'left'
+        add_cell.style.textAlign = 'right'
         let create_button = document.createElement("button")
         create_button.type = 'button'
         create_button.onclick = function () {
             that.lemma.screen.logs.log('new_feature', that.backend_sense_id, '')
             that.add_feature()
         }
-        create_button.innerHTML = 'Add'
+        create_button.innerHTML = '+'
         add_row.appendChild(add_cell)
         add_cell.appendChild(create_button)
         subtable.appendChild(add_cell)

@@ -104,6 +104,7 @@ export class Lemma {
     }
 
     refresh() {
+        this.mark_all_insane()
         let body = document.getElementById('table_body')
         body.innerHTML = ''
         for (const new_id of this.new_id_order) {
@@ -127,7 +128,6 @@ export class Lemma {
         this.new_id_to_sense.set(new_id, new_sense)
         this.new_id_order.splice(this.next_available_index, 0, new_id)
 
-        this.mark_all_insane()
         this.refresh()
     }
 
@@ -137,7 +137,6 @@ export class Lemma {
         this.new_id_to_sense.delete(new_sense_id)
         this.new_id_order.splice(position, 1)
 
-        this.mark_all_insane()
         this.refresh()
     }
 
@@ -166,7 +165,6 @@ export class Lemma {
         const position = this.new_id_order.indexOf(new_sense_id)
         this.new_id_order.splice(position, 1, lit_half.new_sense_id, met_half.new_sense_id)
 
-        this.mark_all_insane()
         this.refresh()
     }
 
@@ -183,7 +181,6 @@ export class Lemma {
         this.new_id_to_sense.set(base_sense_id,
             new Sense(this.new_id_to_sense.get(base_sense_id)))
 
-        this.mark_all_insane()
         this.refresh()
     }
 
@@ -211,7 +208,6 @@ export class Lemma {
         this.new_id_to_sense.set(sense.new_sense_id, new_sense)
         // this.new_id_order.splice(position, 0, new_sense.new_sense_id)
 
-        this.mark_all_insane()
         this.refresh()
     }
 

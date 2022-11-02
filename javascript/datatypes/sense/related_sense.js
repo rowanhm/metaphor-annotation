@@ -15,7 +15,7 @@ export class RelatedSense extends LiteralSense {
     }
 
     set_colour() {
-        this.row.style.backgroundColor = '#E5FFD9'
+        this.row.style.backgroundColor = '#FFEADE'
     }
 
     get_systematic() {
@@ -173,9 +173,6 @@ export class RelatedSense extends LiteralSense {
                 checkbox.type = 'radio'
                 checkbox.name = systematicity_name
                 checkbox.id = name
-                if (this.get_systematic() === bool) {
-                    checkbox.checked = true
-                }
                 checkbox.onclick = function () {
                     that.set_systematic(bool)
                 }
@@ -186,6 +183,12 @@ export class RelatedSense extends LiteralSense {
                 label.htmlFor = name
                 label.innerHTML = option
                 line.appendChild(label)
+
+                if (this.get_systematic() === bool) {
+                    checkbox.checked = true
+                } else if (this.get_systematic() !== null) {
+                    label.style.opacity = '0.5'
+                }
 
                 // Linebreak
                 line.appendChild(document.createElement("br"))

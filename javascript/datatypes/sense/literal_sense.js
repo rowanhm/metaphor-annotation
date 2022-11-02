@@ -10,7 +10,7 @@ export class LiteralSense extends Sense {
     }
 
     set_colour() {
-        this.row.style.backgroundColor = '#FFF3D9'
+        this.row.style.backgroundColor = '#F5E1DA'
     }
 
     fill_relation_cell() {
