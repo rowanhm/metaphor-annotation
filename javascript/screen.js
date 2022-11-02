@@ -153,7 +153,7 @@ export class Screen {
             that.lemma.screen.logs.log('open_guidelines', '', '')
             that.open_guidelines()
         }
-        guidelines.innerHTML = 'See Guidelines'
+        guidelines.innerHTML = 'Open Guidelines'
 
         let new_sense = document.createElement("button")
         new_sense.type = 'button'
@@ -161,7 +161,7 @@ export class Screen {
             that.lemma.screen.logs.log('new_ghost_sense', '', '')
             that.lemma.new_ghost_sense()
         }
-        new_sense.innerHTML = 'New virtual sense'
+        new_sense.innerHTML = 'New Virtual Sense'
 
         let open_wordnet = document.createElement("button")
         open_wordnet.type = 'button'
@@ -170,6 +170,14 @@ export class Screen {
             that.open_wordnet(that.lemma.word)
         }
         open_wordnet.innerHTML = 'Open in WordNet'
+
+        let open_google = document.createElement("button")
+        open_google.type = 'button'
+        open_google.onclick = function () {
+            that.lemma.screen.logs.log('open_in_google', '', '')
+            that.open_google(that.lemma.word)
+        }
+        open_google.innerHTML = 'Open in Google'
 
         submit_cell.appendChild(new_sense)
         let span = document.createElement('span')
@@ -180,6 +188,10 @@ export class Screen {
         span.innerHTML = '&ensp;'
         submit_cell.appendChild(span)
         submit_cell.appendChild(open_wordnet)
+        span = document.createElement('span')
+        span.innerHTML = '&ensp;'
+        submit_cell.appendChild(span)
+        submit_cell.appendChild(open_google)
         span = document.createElement('span')
         span.innerHTML = '&ensp;'
         submit_cell.appendChild(span)
@@ -218,6 +230,11 @@ export class Screen {
 
     open_wordnet(word) {
         window.open(`http://wordnetweb.princeton.edu/perl/webwn?s=${word}`)
+        return false
+    }
+
+    open_google(word) {
+        window.open(`https://www.google.com/search?q=${word}`)
         return false
     }
 

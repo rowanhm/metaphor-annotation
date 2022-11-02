@@ -1,9 +1,12 @@
 import json
+import random
 from collections import defaultdict
 
 from backend.common.common import open_pickle, info
 from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, queues_js_file, MIN_SENSES, \
     MAX_SENSES
+
+rand = random.Random(99)
 
 info('Loading')
 lemma_to_senses = open_pickle(lemmas_to_senses_py_file)
@@ -18,10 +21,10 @@ info(f'{len(lemma_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemma_to_senses = lemmas_to_senses_filtered
 
 info('Splitting by POS')
-pos_dict = defaultdict(set)
+pos_dict = defaultdict(list)
 for lemma_id, sense_ids in lemma_to_senses.items():
     pos = lemma_id.split(':')[1]
-    pos_dict[pos].add((lemma_id, len(sense_ids)))
+    pos_dict[pos].append((lemma_id, len(sense_ids)))
 
 info(f'POS breakdown: {[(pos, len(lemmas)) for pos, lemmas in pos_dict.items()]}')
 
@@ -31,7 +34,8 @@ queue_dict = {}
 for pos, pos_lemmas in pos_dict.items():
     if pos == 'adv':
         continue
-    lemmas_remaining = list(pos_lemmas)
+    lemmas_remaining = pos_lemmas
+    rand.shuffle(lemmas_remaining)
     index = 1
     while len(lemmas_remaining) > 0:
         queue_code = f"{pos}{index:03d}"
