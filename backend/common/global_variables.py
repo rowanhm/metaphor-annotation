@@ -31,7 +31,7 @@ image_dir = extracted_data_dir + 'images/'
 
 # Parameters
 QUEUE_LENGTH = 20
-MIN_SENSES = 8
+MIN_SENSES = 2
 MAX_SENSES = 10
 
 pos_map = {
