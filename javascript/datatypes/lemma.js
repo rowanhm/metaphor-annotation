@@ -193,6 +193,7 @@ export class Lemma {
         if (option === 'metaphorical') {
             new_sense = new MetaphoricalSense(sense)
         } else if (option === 'literal') {
+            sense.set_subcore(false)
             new_sense = new LiteralSense(sense)
         } else if (option === 'related') {
             new_sense = new RelatedSense(sense)

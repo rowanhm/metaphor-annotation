@@ -18,6 +18,7 @@ export class MetaphoricalSense extends Sense {
     set_feature_label(feature_id, label) {
         this.feature_labels[feature_id] = label
         this.insane = true
+        this.lemma.mark_all_insane()
         this.lemma.refresh()
     }
 
@@ -74,7 +75,7 @@ export class MetaphoricalSense extends Sense {
 
                 if (!this.lemma.new_id_order.includes(this.resembles)) {
                     this.resembles = null
-                } else if (!(resembles_sense instanceof LiteralSense)) {
+                } else if (!(this.is_valid_connection(resembles_sense))) {
                     this.resembles = null
                 }
             }
@@ -103,7 +104,7 @@ export class MetaphoricalSense extends Sense {
                         }
                     } else {
                         // Is contained
-                        if (this.feature_labels[feature_id] !== 'modified') {
+                        if (this.feature_labels[feature_id] !== 'mod') {
                             if (feature_id in this.feature_transformation_inputs) {
                                 delete this.feature_transformation_inputs[feature_id]
                             }
@@ -116,8 +117,12 @@ export class MetaphoricalSense extends Sense {
                                     that.fill_name_cell()
                                 }
                                 feature_transformation_input.type = 'text'
+                                feature_transformation_input.size = "30"
                                 feature_transformation_input.value = this.lemma.get_sense(this.resembles).get_feature(feature_id)
                                 autocomplete(feature_transformation_input, this.lemma.datastore.feature_list)
+                                feature_transformation_input.oninput = function () {
+                                    that.refresh_text()
+                                }
                                 this.feature_transformation_inputs[feature_id] = feature_transformation_input
                             }
                         }
@@ -134,6 +139,11 @@ export class MetaphoricalSense extends Sense {
 
     set_colour() {
         this.row.style.backgroundColor = '#F8D9FF'
+    }
+
+    is_valid_connection(other_sense) {
+        return ((other_sense instanceof LiteralSense)) ||
+            ((other_sense instanceof MetaphoricalSense && other_sense.is_subcore() && other_sense.new_sense_id !== this.new_sense_id))
     }
 
     fill_relation_cell() {
@@ -169,7 +179,7 @@ export class MetaphoricalSense extends Sense {
             let option = document.createElement("option");
             option.value = other_sense_id;
             option.text = other_sense.get_outward_facing_id();
-            if (other_sense instanceof LiteralSense) {
+            if (this.is_valid_connection(other_sense)) {
                 if (other_sense_id === this.get_resembles()) {
                     // Select
                     option.selected = true
@@ -189,35 +199,53 @@ export class MetaphoricalSense extends Sense {
         this.relation_cell.appendChild(resemblance_cell)
     }
 
-    fill_features_cell() {
-        this.feature_cell.innerHTML = ''
+    make_text_row(text) {
+        let instruction_row = document.createElement('tr')
+        let instruction_cell = document.createElement('td')
+        instruction_cell.colSpan = "2"
+        let instruction_box = document.createElement('nobr')
+        let instruction_text = document.createElement('i')
+        instruction_text.innerHTML = text
+        instruction_box.appendChild(instruction_text)
+        instruction_cell.appendChild(instruction_box)
+        instruction_row.appendChild(instruction_box)
+        return instruction_row
+    }
+
+    fill_features_table(subtable) {
         const resembles_sense = this.lemma.get_sense(this.get_resembles())
         if (this.get_resembles() === null) {
             // No resembled sense selected
-            let instruction_text = document.createElement('i')
-            instruction_text.innerHTML = 'Select a resemblance to inherit its features'
-            this.feature_cell.appendChild(instruction_text)
+            subtable.appendChild(this.make_text_row('Select a resemblance to inherit its features'))
         } else {
             const features = resembles_sense.get_features()
             if (Object.keys(features).length === 0) {
                 // No features
-                let instruction_text = document.createElement('i')
-                instruction_text.innerHTML = `Add features to ${resembles_sense.get_outward_facing_id()} to get started`
-                this.feature_cell.appendChild(instruction_text)
+                subtable.appendChild(this.make_text_row(`Add features to ${resembles_sense.get_outward_facing_id()} to get started`))
             } else {
                 // Iterate through the shared features and the mapping
-                let subtable = document.createElement('table')
-                this.feature_cell.appendChild(subtable)
-
                 for (const [feature_id, feature_text] of Object.entries(features)) {
                     let row = document.createElement('tr')
                     subtable.appendChild(row)
+
+                    const feature_label = this.get_feature_label(feature_id)
 
                     // Add text
                     let text_cell = document.createElement('td')
                     text_cell.style.textAlign = 'left'
                     let no_break = document.createElement('nobr')
-                    no_break.innerHTML = `This thing ${feature_text}?`
+                    // no_break.innerHTML = `This thing ${feature_text}?`
+
+                    no_break.innerHTML = `This ${feature_text}`
+                    if (feature_label === 'yes') {
+                        no_break.style.color = 'green'
+                    } else if (feature_label === 'no') {
+                        no_break.innerHTML = `<s>This ${feature_text}</s>`
+                        no_break.style.color = 'red'
+                    } else if (feature_label === 'mod') {
+                        no_break.style.color = 'orange'
+                    }
+
                     text_cell.appendChild(no_break)
                     row.appendChild(text_cell)
 
@@ -229,8 +257,7 @@ export class MetaphoricalSense extends Sense {
 
                     const radio_name = `${this.new_sense_id}:feature_select_${feature_id}`
                     let that = this
-                    const feature_label = this.get_feature_label(feature_id)
-                    for (const option of ['Yes', 'No', 'Modified']) {
+                    for (const option of ['Yes', 'No', 'Mod']) {
                         const name = `${radio_name}:${option.toLowerCase()}`
 
                         let input = document.createElement("input");
@@ -245,7 +272,13 @@ export class MetaphoricalSense extends Sense {
 
                         let label = document.createElement("label");
                         label.htmlFor = name
-                        label.innerHTML += option
+                        if (option === 'Yes') {
+                            label.innerHTML += 'Kept'
+                        } else if (option === 'No') {
+                            label.innerHTML += 'Lost'
+                        } else if (option === 'Mod') {
+                            label.innerHTML += 'Modified'
+                        }
 
                         if (option.toLowerCase() === feature_label){
                             input.checked = true
@@ -256,7 +289,7 @@ export class MetaphoricalSense extends Sense {
                     }
 
                     // Add transformation row
-                    if (feature_label === 'modified') {
+                    if (feature_label === 'mod') {
                         let modification_row = document.createElement('tr')
                         let modification_cell = document.createElement('td')
                         modification_cell.style.textAlign = 'left'
@@ -268,7 +301,7 @@ export class MetaphoricalSense extends Sense {
                         modification_cell.colSpan = '2'
 
                         modification_cell.appendChild(no_break)
-                        no_break.innerHTML = '=> This thing '
+                        no_break.innerHTML = '=> This '//'=> This thing '
 
                         let feature_transformation_wrapper = document.createElement('div')
                         feature_transformation_wrapper.className = 'autocomplete'
@@ -279,6 +312,7 @@ export class MetaphoricalSense extends Sense {
                 }
             }
         }
+        return super.fill_features_table(subtable)
     }
 
     update_resembles() {
@@ -311,7 +345,7 @@ export class MetaphoricalSense extends Sense {
                 found_pos_feature = true
             } else if (feature_label === 'no') {
                 found_neg_feature = true
-            } else if (feature_label === 'modified') {
+            } else if (feature_label === 'mod') {
                 if (!(is_valid_feature(this.get_transformation_input(feature_id).value))) {
                     return false
                 }
@@ -331,6 +365,28 @@ export class MetaphoricalSense extends Sense {
         }
     }
 
+    get_features() {
+        this.sanify()
+        let features = {}
+        // First add in features which are accepted of modified
+        if (this.get_resembles() !== null) {
+            for (const [feature_id, feature_text] of Object.entries(this.lemma.get_sense(this.get_resembles()).get_features())) {
+                let label = this.get_feature_label(feature_id)
+                if (label === 'yes') {
+                    features[feature_id] = feature_text
+                } else if (label === 'mod') {
+                    features[`${feature_id}+M`] = this.get_transformation_input(feature_id).value
+                }
+            }
+        }
+        // Now add in its new features
+        for (const [feature_id, feature_input] of Object.entries(this.features_inputs)) {
+            features[feature_id] = feature_input.value
+        }
+        return features
+    }
+
+    // This is for lemma aggregation
     get_feature_list() {
         this.sanify()
         let features = []

@@ -1,4 +1,5 @@
 import {LiteralSense} from "./literal_sense.js";
+import {MetaphoricalSense} from "./metaphorical_sense.js";
 
 export class RelatedSense extends LiteralSense {
 
@@ -47,7 +48,7 @@ export class RelatedSense extends LiteralSense {
 
                 if (!this.lemma.new_id_order.includes(this.resembles)) {
                     this.resembles = null
-                } else if (!(resembles_sense instanceof LiteralSense && (!(resembles_sense instanceof RelatedSense)))) {
+                } else if (!(this.is_valid_connection(resembles_sense))) {
                     this.resembles = null
                 }
             }
@@ -96,6 +97,11 @@ export class RelatedSense extends LiteralSense {
         this.lemma.refresh()
     }
 
+    is_valid_connection(other_sense) {
+        return ((other_sense instanceof LiteralSense && (!(other_sense instanceof RelatedSense)))||
+            ((other_sense instanceof MetaphoricalSense || other_sense instanceof RelatedSense) && other_sense.is_subcore() && other_sense.new_sense_id !== this.new_sense_id))
+    }
+
     fill_relation_cell() {
         // Make dropdown selection
         this.relation_cell.innerHTML = ''
@@ -129,7 +135,7 @@ export class RelatedSense extends LiteralSense {
             let option = document.createElement("option");
             option.value = other_sense_id;
             option.text = other_sense.get_outward_facing_id();
-            if (other_sense instanceof LiteralSense && (!(other_sense instanceof RelatedSense))) {
+            if (this.is_valid_connection(other_sense)) {
                 if (other_sense_id === this.get_resembles()) {
                     // Select
                     option.selected = true

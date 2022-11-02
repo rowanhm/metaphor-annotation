@@ -1,6 +1,7 @@
-import {make_empty_cell} from "../../utilities.js";
+import {is_valid_feature, make_empty_cell} from "../../utilities.js";
 import {WordNetDefinition} from "../definition/wordnet_definition.js";
 import {CustomDefinition} from "../definition/custom_definition.js";
+import {autocomplete} from "../../autocompletion.js";
 
 export class Sense {
 
@@ -23,10 +24,26 @@ export class Sense {
             this.label_options = sense.label_options
             this.is_mixed = sense.is_mixed
             this.is_ghost = sense.is_ghost
+            this.subcore = sense.subcore
+            this.features_inputs = sense.features_inputs
+            this.features_index = sense.features_index
         }
 
         this.label = null
         this.border_pattern = '1px solid black'
+    }
+
+    is_subcore() {
+        this.sanify()
+        return this.subcore
+    }
+
+    set_subcore(value) {
+        if (value !== this.is_subcore()) {
+            this.subcore = value
+            this.lemma.mark_all_insane()
+            this.lemma.refresh()
+        }
     }
 
     is_stable() {
@@ -36,7 +53,21 @@ export class Sense {
         if (this.get_label() === null) {
             return false
         }
+        for (const feature of this.get_feature_list()) {
+            if (!(is_valid_feature(feature))) {
+                return false
+            }
+        }
         return true
+    }
+
+    get_feature_list() {
+        this.sanify()
+        let features = []
+        for (const [feature_id, feature_input] of Object.entries(this.features_inputs)) {
+            features.push(feature_input.value)
+        }
+        return features
     }
 
     get_label() {
@@ -51,6 +82,49 @@ export class Sense {
         if (this.insane) {
             this.insane = false
         }
+    }
+
+    add_feature() {
+        let new_feature = document.createElement('input')
+        new_feature.type = 'text'
+        new_feature.size = "30"
+        let that = this
+        new_feature.oninput = function () {
+            that.refresh_text()
+        }
+        this.features_inputs[`${this.new_sense_id}:${this.features_index}`] = new_feature
+        this.features_index++
+        this.insane = true
+        this.lemma.refresh()
+        autocomplete(new_feature, this.lemma.datastore.feature_list)
+    }
+
+    delete_feature(feature_id) {
+        delete this.features_inputs[feature_id]
+        this.insane = true
+        for (const sense of this.lemma.metaphorical_senses()) {
+            sense.insane = true
+        }
+        this.lemma.refresh()
+    }
+
+    get_features() {
+        this.sanify()
+        let features = {}
+        for (const [feature_id, feature_input] of Object.entries(this.features_inputs)) {
+            features[feature_id] = feature_input.value
+        }
+        return features
+    }
+
+    get_feature(feature_id) {
+        this.sanify()
+        return this.features_inputs[feature_id].value
+    }
+
+    get_feature_inputs() {
+        this.sanify()
+        return this.features_inputs
     }
 
     build_cells() {
@@ -78,6 +152,9 @@ export class Sense {
         this.is_mixed = false
         this.is_ghost = false
         this.known = true
+        this.subcore = false
+        this.features_inputs = {}
+        this.features_index = 0
         // Only literal half will be created this ways -- other initialised as met
         this.label_options = ['Literal', 'Related', 'Metaphorical']
         this.build_cells()
@@ -92,6 +169,9 @@ export class Sense {
         this.is_mixed = false
         this.is_ghost = true
         this.known = true
+        this.subcore = false
+        this.features_inputs = {}
+        this.features_index = 0
         this.build_cells()
     }
 
@@ -218,9 +298,31 @@ export class Sense {
 
                 no_break.appendChild(document.createElement("br"))
                 this.label_selector_cell.appendChild(no_break)
+
+                if ((option === this.get_label()) && (option === "Metaphorical" || option === "Related")) {
+
+                    // Add secondary core option
+                    let subcore_element = document.createElement('nobr')
+                    subcore_element.style.color = 'gray'
+                    subcore_element.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;+ core? '
+                    let checkbox = document.createElement('input')
+                    checkbox.type = 'checkbox'
+                    if (this.is_subcore()) {
+                        checkbox.checked = true
+                    }
+                    subcore_element.appendChild(checkbox)
+                    // subcore_element.style.color = 'grey'
+                    let that = this
+                    subcore_element.onclick = function () {
+                        that.set_subcore(!that.is_subcore())
+                    }
+                    subcore_element.appendChild(document.createElement("br"))
+                    this.label_selector_cell.appendChild(subcore_element)
+                }
             }
         } else {
             this.label_selector_cell.innerHTML = this.label_options[0]
+            this.label_selector_cell.appendChild(document.createElement("br"))
         }
     }
 
@@ -230,6 +332,66 @@ export class Sense {
 
     fill_features_cell() {
         this.feature_cell.innerHTML = ''
+        this.feature_cell.style.textAlign = 'right'
+        let subtable = document.createElement('table')
+        subtable = this.fill_features_table(subtable)
+        this.feature_cell.appendChild(subtable)
+    }
+
+    fill_features_table(subtable) {
+        const features = this.get_feature_inputs()
+        let that = this
+
+        for (const [feature_id, feature_input] of Object.entries(features)) {
+            let row = document.createElement('tr')
+
+            let feature_cell = document.createElement('td')
+            feature_cell.style.textAlign = 'left'
+            feature_cell.colSpan = "2"
+
+            row.appendChild(feature_cell)
+            let no_break = document.createElement('nobr')
+            no_break.innerHTML = 'This ' // This thing
+            let new_feature_wrapper = document.createElement('div')
+            new_feature_wrapper.className = 'autocomplete'
+            new_feature_wrapper.appendChild(feature_input)
+            no_break.appendChild(new_feature_wrapper)
+            feature_cell.appendChild(no_break)
+
+            // let delete_cell = document.createElement('td')
+            //row.appendChild(delete_cell)
+            let delete_button = document.createElement("button")
+            delete_button.type = 'button'
+            delete_button.onclick = function () {
+                that.lemma.screen.logs.log('delete_feature', that.backend_sense_id, `feature_${feature_id}`)
+                that.delete_feature(feature_id)
+            }
+            delete_button.innerHTML = 'Delete'
+            let space = document.createElement('span')
+            space.innerHTML = ' '
+            no_break.appendChild(space)
+            no_break.appendChild(delete_button)
+            // delete_cell.style.textAlign = 'right'
+
+            subtable.appendChild(row)
+        }
+
+        // Add 'add' button
+        let add_row = document.createElement('tr')
+        let add_cell = document.createElement('td')
+        add_cell.colSpan = '2'
+        add_cell.style.textAlign = 'left'
+        let create_button = document.createElement("button")
+        create_button.type = 'button'
+        create_button.onclick = function () {
+            that.lemma.screen.logs.log('new_feature', that.backend_sense_id, '')
+            that.add_feature()
+        }
+        create_button.innerHTML = 'Add'
+        add_row.appendChild(add_cell)
+        add_cell.appendChild(create_button)
+        subtable.appendChild(add_cell)
+        return subtable
     }
 
     make_row() {
@@ -282,5 +444,15 @@ export class Sense {
 
     make_image_cell(){
         this.image_cell = this.definition.make_image_cell()
+    }
+
+    refresh_text() {
+        for (const metaphorical_sense of this.lemma.metaphorical_senses()) {
+            if (metaphorical_sense.new_sense_id !== this.new_sense_id) {
+                metaphorical_sense.fill_features_cell()
+            }
+            metaphorical_sense.fill_name_cell()
+        }
+        this.fill_name_cell()
     }
 }
