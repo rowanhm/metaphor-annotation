@@ -234,7 +234,7 @@ export class Screen {
     }
 
     open_google(word) {
-        window.open(`https://www.google.com/search?q=${word}`)
+        window.open(`https://www.google.com/search?q=${word}+definition`)
         return false
     }
 
