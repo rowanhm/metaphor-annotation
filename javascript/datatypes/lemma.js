@@ -3,6 +3,7 @@ import {MetaphoricalSense} from "./sense/metaphorical_sense.js";
 import {LiteralSense} from "./sense/literal_sense.js";
 import {RelatedSense} from "./sense/related_sense.js";
 import {Issues} from "./issues.js";
+import {CustomDefinition} from "./definition/custom_definition.js";
 
 export class Lemma {
 
@@ -142,23 +143,23 @@ export class Lemma {
 
     split_mixed_sense(new_sense_id) {
         let sense = this.new_id_to_sense.get(new_sense_id)
-
+        const defn = sense.definition.create_definition_simple()
         let lit_half = new Sense(sense)
         lit_half.new_sense_id = new_sense_id+'A'
         lit_half.is_mixed = true
-        lit_half.definition = sense.definition.copy()
+        lit_half.definition = new CustomDefinition(lit_half)
         lit_half.label_options = ['Literal', 'Related']
         lit_half.reset_local_features()
-        lit_half.build_cells()
+        lit_half.build_cells(defn)
 
         let met_half = new MetaphoricalSense(lit_half)
         met_half.new_sense_id = new_sense_id+'B'
         met_half.is_mixed = true
-        met_half.definition = sense.definition.copy()
+        met_half.definition = new CustomDefinition(met_half)
         met_half.label_options = ['Metaphorical']
         met_half.border_pattern = '1px dotted black'
         met_half.reset_local_features()
-        met_half.build_cells()
+        met_half.build_cells(defn)
 
         this.new_id_to_sense.set(lit_half.new_sense_id, lit_half)
         this.new_id_to_sense.set(met_half.new_sense_id, met_half)

@@ -143,7 +143,7 @@ export class Sense {
         return this.features_inputs
     }
 
-    build_cells() {
+    build_cells(defn='') {
         this.row = document.createElement("tr");
         this.row.style.borderTop = this.border_pattern
         this.name_cell = make_empty_cell()
@@ -154,8 +154,8 @@ export class Sense {
         this.label_selector_cell = make_empty_cell()
         this.relation_cell = make_empty_cell()
         this.feature_cell = make_empty_cell()
-        this.feature_cell.style.textAlign = 'right'
-        this.definition.make_definition_cell()
+        this.feature_cell.style.verticalAlign = 'bottom'
+        this.definition.make_definition_cell(defn)
         // this.definition.make_image_cell()
         this.make_row()
     }
@@ -371,6 +371,8 @@ export class Sense {
     fill_features_cell() {
         this.feature_cell.innerHTML = ''
         let subtable = document.createElement('table')
+        subtable.style.marginRight = '0'
+        subtable.style.marginLeft = 'auto'
         subtable = this.fill_features_table(subtable)
         this.feature_cell.appendChild(subtable)
     }

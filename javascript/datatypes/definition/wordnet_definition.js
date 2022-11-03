@@ -37,6 +37,46 @@ export class WordNetDefinition {
         return inner_span
     }
 
+    create_definition_simple() {
+        const sense_info = this.lemma.datastore.senses_to_info[this.original_sense_id]
+        const concept_id = sense_info['concept_id']
+
+        // Add synonyms
+        let definition = ""
+        const synonyms = sense_info['synonyms']
+        if (synonyms.length > 0) {
+            definition += '['
+            for (let i = 0; i < synonyms.length; i++) {
+                const synonym = synonyms[i]
+                const synonym_string = synonym['string']
+                definition += synonym_string.replaceAll('_', ' ')
+
+                if (i < synonyms.length - 1) {
+                    definition += ', '
+                }
+            }
+            definition += '] '
+        }
+
+        // Add definition
+        const definition_string = this.lemma.datastore.concepts_to_definitions[concept_id]
+        definition += definition_string.string
+
+        // Add examples
+        const examples = sense_info['examples']
+        if (examples.length > 0) {
+            definition += ', e.g. '
+            for (let i = 0; i < examples.length; i++) {
+                const example_string = examples[i]
+                definition += example_string
+                if (i < examples.length - 1) {
+                    definition += ', '
+                }
+            }
+        }
+        return String(definition)
+    }
+
     create_definition(old_sense_id, deep_linked=true) {
         const sense_info = this.lemma.datastore.senses_to_info[old_sense_id]
         const concept_id = sense_info['concept_id']

@@ -252,6 +252,7 @@ export class MetaphoricalSense extends Sense {
 
                     // Add options
                     let radio_cell = document.createElement('td')
+                    radio_cell.style.textAlign = 'right'
                     let option_list = document.createElement('nobr')
                     row.appendChild(radio_cell)
                     radio_cell.appendChild(option_list)
