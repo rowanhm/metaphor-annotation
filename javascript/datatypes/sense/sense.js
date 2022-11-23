@@ -296,10 +296,10 @@ export class Sense {
                     option_text = 'Core'
                 } else if (option === 'Related') {
                     label.style.color = '#D04C18'
-                    option_text = 'Association'
+                    option_text = 'Associated'
                 } else if (option === 'Metaphorical') {
                     label.style.color = '#8F45A3'
-                    option_text = 'Metaphor'
+                    option_text = 'Metaphorical'
                 } else {
                     console.error('Invalid label')
                 }
@@ -328,7 +328,7 @@ export class Sense {
                     let label = document.createElement("label");
                     let subname = `${this.new_sense_id}:subcore`
                     label.htmlFor = subname
-                    label.innerHTML = '&nbsp;+ core? '
+                    label.innerHTML = '&nbsp;+ Conduit? '
                     subcore_element.appendChild(label)
 
                     let checkbox = document.createElement('input')
@@ -370,6 +370,7 @@ export class Sense {
 
     fill_features_cell() {
         this.feature_cell.innerHTML = ''
+
         let subtable = document.createElement('table')
         subtable.style.marginRight = '0'
         subtable.style.marginLeft = 'auto'
@@ -415,21 +416,33 @@ export class Sense {
             subtable.appendChild(row)
         }
 
-        // Add 'add' button
-        let add_row = document.createElement('tr')
-        let add_cell = document.createElement('td')
-        add_cell.colSpan = '2'
-        add_cell.style.textAlign = 'right'
-        let create_button = document.createElement("button")
-        create_button.type = 'button'
-        create_button.onclick = function () {
-            that.lemma.screen.logs.log('new_feature', that.get_backend_sense_id(), '')
-            that.add_feature()
+        // Check if it needs to add an "add" button
+        let connected = false
+        for (const sense of this.lemma.metaphorical_senses()) {
+            if (sense.get_resembles() === this.new_sense_id) {
+                connected = true
+                break
+            }
         }
-        create_button.innerHTML = '+'
-        add_row.appendChild(add_cell)
-        add_cell.appendChild(create_button)
-        subtable.appendChild(add_cell)
+        if (connected) {
+            // Add 'add' button
+            let add_row = document.createElement('tr')
+            let add_cell = document.createElement('td')
+            add_cell.colSpan = '2'
+            add_cell.style.textAlign = 'right'
+            let create_button = document.createElement("button")
+            create_button.type = 'button'
+            create_button.onclick = function () {
+                that.lemma.screen.logs.log('new_feature', that.get_backend_sense_id(), '')
+                that.add_feature()
+            }
+            create_button.innerHTML = '+'
+            add_row.appendChild(add_cell)
+            add_cell.appendChild(create_button)
+            subtable.appendChild(add_cell)
+        }
+
+        // Add 'add' button
         return subtable
     }
 
