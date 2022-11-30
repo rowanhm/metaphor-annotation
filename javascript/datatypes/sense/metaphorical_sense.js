@@ -241,7 +241,7 @@ export class MetaphoricalSense extends Sense {
                     if (feature_label === 'kept') {
                         no_break.style.color = 'green'
                     } else if (feature_label === 'lost') {
-                        no_break.innerHTML = `<s>This ${feature_text}</s>`
+                        no_break.innerHTML = `<s>This thing ${feature_text}</s>`
                         no_break.style.color = 'red'
                     } else if (feature_label === 'modified') {
                         no_break.style.color = '#F17400'
