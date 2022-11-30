@@ -391,7 +391,7 @@ export class Sense {
 
             row.appendChild(feature_cell)
             let no_break = document.createElement('nobr')
-            no_break.innerHTML = 'This ' // This thing
+            no_break.innerHTML = 'This thing ' // This thing
             let new_feature_wrapper = document.createElement('div')
             new_feature_wrapper.className = 'autocomplete'
             new_feature_wrapper.appendChild(feature_input)

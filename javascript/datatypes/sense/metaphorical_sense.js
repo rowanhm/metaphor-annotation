@@ -217,7 +217,7 @@ export class MetaphoricalSense extends Sense {
         const resembles_sense = this.lemma.get_sense(this.get_resembles())
         if (this.get_resembles() === null) {
             // No resembled sense selected
-            subtable.appendChild(this.make_text_row('Select which sense this connects to'))
+            subtable.appendChild(this.make_text_row('')) // 'Select which sense this connects to'
         } else {
             const features = resembles_sense.get_features()
             if (Object.keys(features).length === 0) {
