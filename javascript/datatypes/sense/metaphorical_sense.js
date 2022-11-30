@@ -235,9 +235,9 @@ export class MetaphoricalSense extends Sense {
                     let text_cell = document.createElement('td')
                     text_cell.style.textAlign = 'left'
                     let no_break = document.createElement('nobr')
-                    // no_break.innerHTML = `This thing ${feature_text}?`
+                    no_break.innerHTML = `This thing ${feature_text}`
 
-                    no_break.innerHTML = `This ${feature_text}`
+                    //no_break.innerHTML = `This ${feature_text}`
                     if (feature_label === 'kept') {
                         no_break.style.color = 'green'
                     } else if (feature_label === 'lost') {
@@ -299,7 +299,7 @@ export class MetaphoricalSense extends Sense {
                         modification_cell.colSpan = '2'
 
                         modification_cell.appendChild(no_break)
-                        no_break.innerHTML = '&nbsp;&#8627; This '//'=> This thing '
+                        no_break.innerHTML = '&nbsp;&#8627; This thing '//'=> This thing '
 
                         let feature_transformation_wrapper = document.createElement('div')
                         feature_transformation_wrapper.className = 'autocomplete'
