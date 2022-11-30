@@ -28,9 +28,10 @@ export class RelatedSense extends LiteralSense {
         if (this.get_resembles() === null) {
             issues.add_issue(`${this.get_outward_facing_id()} is not connected to another sense.`)
         }
+        /*
         if (this.get_systematic() === null) {
             issues.add_issue(`${this.get_outward_facing_id()} is not labelled as regular or irregular.`)
-        }
+        }*/
         return issues
     }
 
@@ -84,7 +85,7 @@ export class RelatedSense extends LiteralSense {
     get_data() {
         let sense_data = super.get_data()
         sense_data['connected_to'] = this.lemma.get_sense(this.get_resembles()).get_backend_sense_id()
-        sense_data['is_regular'] = this.get_systematic()
+        // sense_data['is_regular'] = this.get_systematic()
         return sense_data
     }
 
@@ -154,7 +155,7 @@ export class RelatedSense extends LiteralSense {
         this.relation_cell.appendChild(document.createElement('br'))
 
         // Add ad-hoc vs. systematic choice
-
+        /*
         if (this.get_resembles() !== null) {
 
             const systematicity_name = `${this.new_sense_id}:systematicity`
@@ -194,6 +195,6 @@ export class RelatedSense extends LiteralSense {
                 systematicity.appendChild(line)
             }
             this.relation_cell.appendChild(systematicity)
-        }
+        }*/
     }
 }
