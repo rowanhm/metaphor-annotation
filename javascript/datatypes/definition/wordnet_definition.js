@@ -9,6 +9,10 @@ export class WordNetDefinition {
         this.concept_id = this.lemma.datastore.senses_to_info[this.original_sense_id]['concept_id']
     }
 
+    get_definition() {
+        return this.create_definition_simple()
+    }
+
     copy() {
         let defn = new WordNetDefinition(this.lemma, this.original_sense_id)
         defn.make_definition_cell()

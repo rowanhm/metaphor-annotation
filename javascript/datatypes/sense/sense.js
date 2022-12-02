@@ -492,9 +492,8 @@ export class Sense {
             label = 'metaphor'
         }
         sense_data['label'] = label
-        if (this.definition instanceof CustomDefinition) {
-            sense_data['definition'] = this.definition.get_definition()
-        }
+        sense_data['definition'] = this.definition.get_definition()
+
         sense_data['features'] = this.get_features()
         return sense_data
     }
