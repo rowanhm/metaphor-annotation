@@ -1,6 +1,6 @@
 import {Sense} from "./sense.js";
 import {LiteralSense} from "./literal_sense.js";
-import {autocomplete} from "../../autocompletion.js";
+//import {autocomplete} from "../../autocompletion.js";
 import {is_valid_feature} from "../../utilities.js";
 
 export class MetaphoricalSense extends Sense {
@@ -119,7 +119,7 @@ export class MetaphoricalSense extends Sense {
                                 feature_transformation_input.type = 'text'
                                 feature_transformation_input.size = "30"
                                 feature_transformation_input.value = this.lemma.get_sense(this.resembles).get_feature(feature_id)
-                                autocomplete(feature_transformation_input, this.lemma.datastore.feature_list)
+                                //autocomplete(feature_transformation_input, this.lemma.datastore.feature_list)
                                 feature_transformation_input.oninput = function () {
                                     that.refresh_text()
                                 }
@@ -301,11 +301,11 @@ export class MetaphoricalSense extends Sense {
                         modification_cell.appendChild(no_break)
                         no_break.innerHTML = '&nbsp;&#8627; This thing '//'=> This thing '
 
-                        let feature_transformation_wrapper = document.createElement('div')
-                        feature_transformation_wrapper.className = 'autocomplete'
-                        feature_transformation_wrapper.appendChild(this.get_transformation_input(feature_id))
+                        // let feature_transformation_wrapper = document.createElement('div')
+                        //feature_transformation_wrapper.className = 'autocomplete'
+                        // feature_transformation_wrapper.appendChild(this.get_transformation_input(feature_id))
 
-                        no_break.appendChild(feature_transformation_wrapper)
+                        no_break.appendChild(this.get_transformation_input(feature_id))
                     }
                 }
             }
