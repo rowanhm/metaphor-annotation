@@ -217,9 +217,13 @@ export class Lemma {
     get_data() {
         let return_data = {};
 
+        let position = 0
         for (const sense of this.all_senses()) {
             const sense_id = sense.get_backend_sense_id()
-            return_data[sense_id] = sense.get_data()
+            let data = sense.get_data()
+            data['position'] = position  // Add the position in the lemma list
+            position++
+            return_data[sense_id] = data
         }
         return return_data
     }

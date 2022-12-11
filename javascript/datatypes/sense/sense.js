@@ -480,6 +480,7 @@ export class Sense {
 
     get_data() {
         let sense_data = {}
+        sense_data['outward_id'] = this.new_sense_id
         sense_data['is_known'] = this.known
         sense_data['is_mixed'] = this.is_mixed
         sense_data['is_virtual'] = this.is_ghost
