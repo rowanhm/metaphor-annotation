@@ -134,8 +134,9 @@ export class Sense {
     }
 
     get_feature(feature_id) {
-        this.sanify()
-        return this.features_inputs[feature_id].value
+        //this.sanify()
+        //return this.features_inputs[feature_id].value
+        return this.get_features()[feature_id]
     }
 
     get_feature_inputs() {
