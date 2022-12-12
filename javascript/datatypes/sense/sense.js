@@ -497,6 +497,7 @@ export class Sense {
         sense_data['definition'] = this.definition.get_definition()
 
         sense_data['features'] = this.get_features()
+        sense_data['is_conduit'] = this.is_subcore()
         return sense_data
     }
 
