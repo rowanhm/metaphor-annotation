@@ -151,6 +151,7 @@ export class Lemma {
         lit_half.label_options = ['Literal', 'Related']
         lit_half.reset_local_features()
         lit_half.build_cells(defn)
+        this.new_id_to_sense.set(lit_half.new_sense_id, lit_half)
 
         let met_half = new MetaphoricalSense(lit_half)
         met_half.new_sense_id = new_sense_id+'B'
@@ -160,8 +161,6 @@ export class Lemma {
         met_half.border_pattern = '1px dotted black'
         met_half.reset_local_features()
         met_half.build_cells(defn)
-
-        this.new_id_to_sense.set(lit_half.new_sense_id, lit_half)
         this.new_id_to_sense.set(met_half.new_sense_id, met_half)
 
         // Replace

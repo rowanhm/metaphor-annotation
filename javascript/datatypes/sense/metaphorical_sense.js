@@ -70,20 +70,28 @@ export class MetaphoricalSense extends Sense {
         if (this.insane) {
             // Make sure the thing it resembles is a literal
             let resembles_sense = null
-            if (this.resembles !== null) {
-                resembles_sense = this.lemma.get_sense(this.resembles)
+            if (this.is_mixed) {
+                // Set resembles to other half
+                this.resembles = this.new_sense_id.slice(0, -1) + 'A'
+            } else {
+                if (this.resembles !== null) {
+                    resembles_sense = this.lemma.get_sense(this.resembles)
 
-                if (!this.lemma.new_id_order.includes(this.resembles)) {
-                    this.resembles = null
-                } else if (!(this.is_valid_connection(resembles_sense))) {
-                    this.resembles = null
+                    if (!this.lemma.new_id_order.includes(this.resembles)) {
+                        this.resembles = null
+                    } else if (!(this.is_valid_connection(resembles_sense))) {
+                        this.resembles = null
+                    }
                 }
             }
 
             // Handle features
             if (this.resembles !== null) {
 
+                resembles_sense = this.lemma.get_sense(this.resembles)
+
                 let found_features = new Set()
+
                 const features = resembles_sense.get_features()
                 // Create feature_labels for missing features
                 for (const [feature_id, feature_text] of Object.entries(features)) {
@@ -147,56 +155,60 @@ export class MetaphoricalSense extends Sense {
     }
 
     fill_relation_cell() {
-        // Make dropdown selection
-        this.relation_cell.innerHTML = ''
+        if (!this.is_mixed) {
+            // Make dropdown selection
+            this.relation_cell.innerHTML = ''
 
-        let resemblance_cell = document.createElement('nobr')
-        //resemblance_cell.innerHTML = 'Connects to '
+            let resemblance_cell = document.createElement('nobr')
+            //resemblance_cell.innerHTML = 'Connects to '
 
-        let select_resemblance = document.createElement("select");
-        select_resemblance.id = `${this.new_sense_id}:resemblance_select`
-        let that = this
-        select_resemblance.onchange = function(){
-            that.lemma.screen.logs.log('connect', that.get_backend_sense_id(), that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).get_backend_sense_id())
-            that.update_resembles()
-        }
-
-        let blank_option = document.createElement("option");
-        blank_option.value = null
-        blank_option.disabled = true
-        blank_option.hidden = true
-        blank_option.innerHTML = 'select';
-        select_resemblance.appendChild(blank_option)
-
-        // Add options
-        let found_resembles = false
-        if (this.get_resembles() === null) {
-            blank_option.selected = true
-            found_resembles = true
-        }
-        for (const other_sense of this.lemma.all_senses()) {
-            const other_sense_id = other_sense.new_sense_id
-            let option = document.createElement("option");
-            option.value = other_sense_id;
-            option.text = other_sense.get_outward_facing_id();
-            if (this.is_valid_connection(other_sense)) {
-                if (other_sense_id === this.get_resembles()) {
-                    // Select
-                    option.selected = true
-                    found_resembles = true
-                }
-            } else {
-                // Hide
-                option.disabled = true
+            let select_resemblance = document.createElement("select");
+            select_resemblance.id = `${this.new_sense_id}:resemblance_select`
+            let that = this
+            select_resemblance.onchange = function () {
+                that.lemma.screen.logs.log('connect', that.get_backend_sense_id(), that.lemma.get_sense(document.getElementById(`${that.new_sense_id}:resemblance_select`).value).get_backend_sense_id())
+                that.update_resembles()
             }
-            select_resemblance.appendChild(option);
-        }
-        if (!found_resembles) {
-            console.error(`Failed to find resembled (${this.new_sense_id} resembles ${this.get_resembles()})`)
-        }
 
-        resemblance_cell.appendChild(select_resemblance)
-        this.relation_cell.appendChild(resemblance_cell)
+            let blank_option = document.createElement("option");
+            blank_option.value = null
+            blank_option.disabled = true
+            blank_option.hidden = true
+            blank_option.innerHTML = 'select';
+            select_resemblance.appendChild(blank_option)
+
+            // Add options
+            let found_resembles = false
+            if (this.get_resembles() === null) {
+                blank_option.selected = true
+                found_resembles = true
+            }
+            for (const other_sense of this.lemma.all_senses()) {
+                const other_sense_id = other_sense.new_sense_id
+                let option = document.createElement("option");
+                option.value = other_sense_id;
+                option.text = other_sense.get_outward_facing_id();
+                if (this.is_valid_connection(other_sense)) {
+                    if (other_sense_id === this.get_resembles()) {
+                        // Select
+                        option.selected = true
+                        found_resembles = true
+                    }
+                } else {
+                    // Hide
+                    option.disabled = true
+                }
+                select_resemblance.appendChild(option);
+            }
+            if (!found_resembles) {
+                console.error(`Failed to find resembled (${this.new_sense_id} resembles ${this.get_resembles()})`)
+            }
+
+            resemblance_cell.appendChild(select_resemblance)
+            this.relation_cell.appendChild(resemblance_cell)
+        } else {
+            this.relation_cell.innerHTML = this.lemma.get_sense(this.get_resembles()).get_outward_facing_id();
+        }
     }
 
     make_text_row(text) {

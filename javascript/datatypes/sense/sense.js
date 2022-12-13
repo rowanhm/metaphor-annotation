@@ -275,9 +275,10 @@ export class Sense {
     }
 
     fill_label_cell() {
+        this.label_selector_cell.innerHTML = ''
+
         if (this.label_options.length > 1) {
             let that = this
-            this.label_selector_cell.innerHTML = ''
             const select_name = `${this.new_sense_id}:label_assign`
             for (const option of this.label_options) {
                 let no_break = document.createElement('nobr')
@@ -360,8 +361,45 @@ export class Sense {
 
             }
         } else {
-            this.label_selector_cell.innerHTML = this.label_options[0]
-            this.label_selector_cell.appendChild(document.createElement("br"))
+
+
+            let no_break = document.createElement("nobr")
+            no_break.innerHTML = this.label_options[0]
+            this.label_selector_cell.appendChild(no_break)
+
+            // Add conduit
+            if (this.label_options[0] === "Metaphorical" || this.label_options[0] === "Related") {
+
+                // Add secondary core option
+                let subcore_element = document.createElement('span')
+                let label = document.createElement("label");
+                let subname = `${this.new_sense_id}:subcore`
+                label.htmlFor = subname
+                label.innerHTML = '&nbsp;+ Conduit? '
+                subcore_element.appendChild(label)
+
+                let checkbox = document.createElement('input')
+                checkbox.type = 'checkbox'
+                checkbox.id = subname
+                if (this.is_subcore()) {
+                    checkbox.checked = true
+                } else {
+                    label.style.opacity = '0.5'
+                }
+                subcore_element.appendChild(checkbox)
+                // subcore_element.style.color = 'grey'
+                let that = this
+                subcore_element.onclick = function () {
+                    let is_subcore = that.is_subcore()
+                    if (!is_subcore) {
+                        that.lemma.screen.logs.log(`promote_to_secondary_core`, that.get_backend_sense_id(), ``)
+                    } else {
+                        that.lemma.screen.logs.log(`demote_from_secondary_core`, that.get_backend_sense_id(), ``)
+                    }
+                    that.set_subcore(!is_subcore)
+                }
+                no_break.appendChild(subcore_element)
+            }
         }
     }
 
