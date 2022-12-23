@@ -198,6 +198,23 @@ export class Screen {
         submit_cell.appendChild(submit)
         footer_row.appendChild(submit_cell)
 
+        // Free form input
+
+        let footer_row_comments = document.createElement("tr")
+        let comments_cell = document.createElement('td')
+        comments_cell.style.verticalAlign = 'top'
+        let comment_prompt = document.createElement("span")
+        comment_prompt.style.color = 'grey'
+        comment_prompt.innerHTML = 'Optional comments:'
+        comments_cell.appendChild(comment_prompt)
+        comments_cell.appendChild(document.createElement('br'))
+        comments_cell.colSpan = '6'
+        footer_row_comments.appendChild(comments_cell)
+        footer.appendChild(comments_cell)
+        this.comments_input = document.createElement('textarea')
+        comments_cell.appendChild(this.comments_input)
+
+
         // Warning cell
         let footer_row_2 = document.createElement("tr")
         this.warning_cell = document.createElement('td')
@@ -252,7 +269,7 @@ export class Screen {
         }
 
         const return_data = this.lemma.get_data()
-        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data, this.known_box.checked).then(() => {
+        save_lemma(this.manager.user_id, this.manager.queue_name, this.lemma.lemma_name, return_data, this.known_box.checked, this.comments_input.value).then(() => {
 
             // Extract features
             let feature_frequencies = this.manager.datastore.feature_frequencies
