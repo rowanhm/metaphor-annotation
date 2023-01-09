@@ -125,11 +125,13 @@ export class Lemma {
         this.next_available_index++
         let new_sense = new Sense(null)
         new_sense.initialise_custom_sense(this, new_id)
+        new_sense = new RelatedSense(new_sense)
 
         this.new_id_to_sense.set(new_id, new_sense)
         this.new_id_order.splice(this.next_available_index, 0, new_id)
 
         this.refresh()
+        //        this.set_label(new_sense, 'Related')
     }
 
     delete_ghost_sense(new_sense_id) {

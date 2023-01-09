@@ -181,7 +181,7 @@ export class Sense {
         this.backend_sense_id = `new:${this.lemma.get_next_new_sense_id()}`
         this.new_sense_id = new_sense_id
         this.definition = new CustomDefinition(this)
-        this.label_options = ['Literal' , 'Related']
+        this.label_options = ['Related']
         this.is_mixed = false
         this.is_ghost = true
         this.known = true
@@ -364,7 +364,22 @@ export class Sense {
 
 
             let no_break = document.createElement("nobr")
-            no_break.innerHTML = this.label_options[0]
+            let option = this.label_options[0]
+            let label = document.createElement("span")
+            if (option === 'Literal') {
+                label.style.color = '#772206'
+                label.innerHTML = 'Core'
+            } else if (option === 'Related') {
+                label.style.color = '#D04C18'
+                label.innerHTML = 'Associated'
+            } else if (option === 'Metaphorical') {
+                label.style.color = '#8F45A3'
+                label.innerHTML = 'Metaphorical'
+            } else {
+                console.error('Invalid label')
+            }
+
+            no_break.appendChild(label)
             this.label_selector_cell.appendChild(no_break)
 
             // Add conduit
