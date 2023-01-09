@@ -29,6 +29,10 @@ queues_js_file = extracted_data_dir + 'queues.json'
 
 image_dir = extracted_data_dir + 'images/'
 
+wiki_data_dir = raw_data_dir + 'wiki_extracted/'
+wiki_lemma_frequency_file = raw_data_dir + 'wiki_lemma_frequencies'
+wiki_token_frequency_file = raw_data_dir + 'wiki_token_frequencies'
+
 # Parameters
 QUEUE_LENGTH = 20
 MIN_SENSES = 2

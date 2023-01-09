@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 import pickle
 import logging
@@ -85,7 +86,7 @@ def open_csv(file):
     return all_lines
 
 
-def open_dict_csv(file, delimiter=None):
+def open_dict_csv(file, delimiter=None, encoding=None):
     ftype = file[-4:]
     if delimiter is None:
         if ftype == '.tsv':
@@ -97,7 +98,7 @@ def open_dict_csv(file, delimiter=None):
             print("Invalid file extension: {}".format(file))
             exit()
     all_lines = []
-    with open(file, 'r') as csv_file:
+    with open(file, 'r', encoding=encoding) as csv_file:
         for line in csv.DictReader(csv_file, delimiter=delimiter):
             all_lines += [line]
     return all_lines
@@ -121,7 +122,7 @@ def save_list_csv(file, all_lines):
             csv_writer.writerow(row)
 
 
-def save_csv(file, all_lines):
+def save_csv(file, all_lines, encoding=None):
     ftype = file[-4:]
     delimiter = ''
     if ftype == '.tsv':
@@ -132,13 +133,17 @@ def save_csv(file, all_lines):
         # update
         print("Invalid file extension: {}".format(file))
         exit()
-    with open(file, 'w') as csv_file:
+    with open(file, 'w', encoding=encoding) as csv_file:
         dict_writer = csv.DictWriter(csv_file, fieldnames=all_lines[0].keys(), delimiter=delimiter,
                                      quoting=csv.QUOTE_NONE, escapechar='\\')
         dict_writer.writeheader()
         dict_writer.writerows(all_lines)
     return
 
+
+def save_json(file, dictionary):
+    with open(file, "w") as fp:
+        json.dump(dictionary, fp)
 
 def strip_surrounding_whitespace(string):
     return string.lstrip().rstrip()
