@@ -214,7 +214,7 @@ for (num_overall, num_overlapping) in NUM_WORDS:
 
         inner_index = 1
         while len(annotation_set) > 0:
-            queue_code = f"{annotator_code}.{outer_index:01d}{inner_index:03d}"
+            queue_code = f"{annotator_code}:{outer_index:01d}{inner_index:03d}"
             assert queue_code not in queue_dict.keys()
 
             queue = sorted(annotation_set[:QUEUE_LENGTH], key=lambda x: x[1])
