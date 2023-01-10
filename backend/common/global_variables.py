@@ -26,6 +26,7 @@ concepts_to_definitions_dir = extracted_data_dir + 'concepts_to_definitions/'
 senses_to_info_dir = extracted_data_dir + 'senses_to_info/'
 
 queues_js_file = extracted_data_dir + 'queues.json'
+queues_overlaps_js_file = extracted_data_dir + 'overlaps.json'
 
 image_dir = extracted_data_dir + 'images/'
 

@@ -2,9 +2,9 @@ import json
 import random
 from collections import defaultdict
 
-from backend.common.common import open_pickle, info, safe_lemma_from_key
+from backend.common.common import open_pickle, info, safe_lemma_from_key, save_json
 from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, queues_js_file, MIN_SENSES, \
-    MAX_SENSES, wiki_lemma_frequency_file, NUM_WORDS, ANNOTATOR_CODES
+    MAX_SENSES, wiki_lemma_frequency_file, NUM_WORDS, ANNOTATOR_CODES, queues_overlaps_js_file
 
 rand = random.Random(10)
 
@@ -194,6 +194,8 @@ lemmas = weighted_sample_without_replacement(lemmas, weights=[l[2] for l in lemm
 
 info('Splitting')
 queue_dict = {}
+overlaps_dict = {}
+
 rand.shuffle(lemmas)
 
 outer_index = 1
@@ -202,6 +204,11 @@ for (num_overall, num_overlapping) in NUM_WORDS:
 
     overlapping = lemmas[:num_overlapping]
     lemmas = lemmas[num_overlapping:]
+
+    # Save overlapping
+    overlaps_code = f'overlaps:{outer_index:01d}'
+    assert overlaps_code not in overlaps_dict.keys()
+    overlaps_dict[overlaps_code] = [itm[0] for itm in sorted(overlapping, key=lambda x: x[1])]
 
     by_annotator = {}
     for annotator_code in ANNOTATOR_CODES:
@@ -229,5 +236,6 @@ for (num_overall, num_overlapping) in NUM_WORDS:
 assert len(lemmas) == 0
 
 info('Saving')
-with open(queues_js_file, "w") as fp:
-    json.dump(queue_dict, fp)
+save_json(queues_js_file, queue_dict)
+save_json(queues_overlaps_js_file, overlaps_dict)
+
