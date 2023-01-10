@@ -2,14 +2,15 @@ import json
 import random
 from collections import defaultdict
 
-from backend.common.common import open_pickle, info, open_dict_csv, safe_lemma_from_key
+from backend.common.common import open_pickle, info, safe_lemma_from_key
 from backend.common.global_variables import lemmas_to_senses_py_file, QUEUE_LENGTH, queues_js_file, MIN_SENSES, \
-    MAX_SENSES, word_frequencies_file
+    MAX_SENSES, wiki_lemma_frequency_file, NUM_WORDS, ANNOTATOR_CODES
 
-rand = random.Random(99)
+rand = random.Random(10)
 
 info('Loading')
 lemmas_to_senses = open_pickle(lemmas_to_senses_py_file)
+
 info(f'{len(lemmas_to_senses)} lemmas total')
 
 info('Filtering monosemes')
@@ -20,29 +21,40 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered
 
-info('Filtering derivationally related forms and infrequent')
-# Reformatting frequencies
-frequency_data = open_dict_csv(word_frequencies_file)
+info('Filtering derivationally related forms')
+
+# Reformat frequencies
+frequency_map_raw = open_pickle(wiki_lemma_frequency_file + '.pkl')
 frequency_map = defaultdict(int)
-for entry in frequency_data:
-    pos = entry['PoS']
-    new_pos = None
-    if pos == 'j':
-        new_pos = 'adj'
-    elif pos == 'n':
-        new_pos = 'noun'
-    elif pos == 'v':
-        new_pos = 'verb'
-    elif pos == 'r':
-        new_pos = 'adv'
-    if new_pos is not None:
-        frequency_map[(entry['lemma'], new_pos)] += int(entry['freq'])
+simple_map = {
+    'ADJ': 'adj',
+    'ADP': 'func',
+    'ADV': 'adv',
+    'AUX': 'func',
+    'CCONJ': 'func',
+    'DET': 'func',
+    # 'INTJ': 'interjection',
+    'NOUN': 'noun',
+    'NUM': 'noun',
+    'PART': 'func',
+    'PRON': 'func',
+    'PROPN': 'noun',
+    # 'PUNCT': 'punctuation',
+    'SCONJ': 'func',
+    # 'SYM': 'symbol',
+    'VERB': 'verb'
+    # 'X': 'other',
+}
+for (word, pos), count in frequency_map_raw.items():
+    if pos in simple_map.keys():
+        frequency_map[(word, simple_map[pos])] += count
 
 senses_to_lemmas = {}
 for lemma, senses in lemmas_to_senses.items():
     for sense in senses:
         assert sense not in senses_to_lemmas.keys()
         senses_to_lemmas[sense] = lemma
+
 lemmas_to_senses_filtered = {}
 for lemma_id, sense_ids in lemmas_to_senses.items():
     word, pos, index = lemma_id.split(':')
@@ -121,7 +133,6 @@ for lemma_id, sense_ids in lemmas_to_senses.items():
             lemmas_to_senses_filtered[lemma_id] = sense_ids
             break
 
-
 info(f'{len(lemmas_to_senses)} -> {len(lemmas_to_senses_filtered)} lemmas')
 lemmas_to_senses = lemmas_to_senses_filtered
 
@@ -155,30 +166,67 @@ lemmas_to_senses = lemmas_to_senses_filtered
 info('Splitting by POS')
 pos_dict = defaultdict(list)
 for lemma_id, sense_ids in lemmas_to_senses.items():
-    pos = lemma_id.split(':')[1]
-    pos_dict[pos].append((lemma_id, len(sense_ids)))
+    wordform, pos, _ = lemma_id.split(':')
+    freq = frequency_map[(wordform, pos)]
+    pos_dict[pos].append((lemma_id, len(sense_ids), freq))
 
 info(f'POS breakdown: {[(pos, len(lemmas)) for pos, lemmas in pos_dict.items()]}')
 
+NUM_ANNOTATORS = len(ANNOTATOR_CODES)
+total_words = sum([((total-shared)*NUM_ANNOTATORS)+shared for total, shared in NUM_WORDS])
+info(f'Sample most frequent {total_words} noun lemmas')
+lemmas = pos_dict['noun']  # list of (word, num_senses, freq)
+
+
+def weighted_sample_without_replacement(population, weights, k):
+    v = [rand.random() ** (1 / w) for w in weights]
+    order = sorted(range(len(population)), key=lambda i: v[i])
+    return [population[i] for i in order[-k:]]
+
+
+lemmas = weighted_sample_without_replacement(lemmas, weights=[l[2] for l in lemmas], k=total_words)
+
+
+# counts = defaultdict(int)
+# for _, num_senses, _ in lemmas:
+#     counts[num_senses] += 1
+# info(f'Counts: {counts}')
+
 info('Splitting')
 queue_dict = {}
+rand.shuffle(lemmas)
 
-for pos, pos_lemmas in pos_dict.items():
-    if pos == 'adv':
-        continue
-    lemmas_remaining = pos_lemmas
-    rand.shuffle(lemmas_remaining)
-    index = 1
-    while len(lemmas_remaining) > 0:
-        queue_code = f"{pos}{index:03d}"
-        assert queue_code not in queue_dict.keys()
+outer_index = 1
+for (num_overall, num_overlapping) in NUM_WORDS:
+    num_unique = num_overall - num_overlapping
 
-        queue = sorted(lemmas_remaining[:QUEUE_LENGTH], key=lambda x: x[1])
-        queue = [lemma_id for (lemma_id, num_senses) in queue]  # Strip the num of senses
-        queue_dict[queue_code] = queue
+    overlapping = lemmas[:num_overlapping]
+    lemmas = lemmas[num_overlapping:]
 
-        lemmas_remaining = lemmas_remaining[QUEUE_LENGTH:]
-        index += 1
+    by_annotator = {}
+    for annotator_code in ANNOTATOR_CODES:
+        by_annotator[annotator_code] = overlapping + lemmas[:num_unique]
+        lemmas = lemmas[num_unique:]
+
+    for annotator_code, annotation_set in by_annotator.items():
+        assert len(annotation_set) == num_overall
+        rand.shuffle(annotation_set)
+
+        inner_index = 1
+        while len(annotation_set) > 0:
+            queue_code = f"{annotator_code}.{outer_index:01d}{inner_index:03d}"
+            assert queue_code not in queue_dict.keys()
+
+            queue = sorted(annotation_set[:QUEUE_LENGTH], key=lambda x: x[1])
+            queue = [itm[0] for itm in queue]  # Strip the num of senses
+            queue_dict[queue_code] = queue
+
+            annotation_set = annotation_set[QUEUE_LENGTH:]
+            inner_index += 1
+
+    outer_index += 1
+
+assert len(lemmas) == 0
 
 info('Saving')
 with open(queues_js_file, "w") as fp:

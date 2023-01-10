@@ -34,9 +34,11 @@ wiki_lemma_frequency_file = raw_data_dir + 'wiki_lemma_frequencies'
 wiki_token_frequency_file = raw_data_dir + 'wiki_token_frequencies'
 
 # Parameters
-QUEUE_LENGTH = 20
+QUEUE_LENGTH = 10
 MIN_SENSES = 2
 MAX_SENSES = 10
+NUM_WORDS = [(100, 20), (500, 40), (1000, 40), (500, 0)]  # (total, shared)
+ANNOTATOR_CODES = ['bp458', 'ojc42']
 
 pos_map = {
     'v': 'verb',
