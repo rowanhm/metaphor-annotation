@@ -179,6 +179,14 @@ export class Screen {
         }
         open_google.innerHTML = 'Open in Google'
 
+        let open_ety = document.createElement("button")
+        open_ety.type = 'button'
+        open_ety.onclick = function () {
+            that.lemma.screen.logs.log('open_etymology', '', '')
+            that.open_etymology(that.lemma.word)
+        }
+        open_ety.innerHTML = 'Open in Etymonline'
+
         submit_cell.appendChild(new_sense)
         let span = document.createElement('span')
         span.innerHTML = '&ensp;'
@@ -192,6 +200,10 @@ export class Screen {
         span.innerHTML = '&ensp;'
         submit_cell.appendChild(span)
         submit_cell.appendChild(open_google)
+        span = document.createElement('span')
+        span.innerHTML = '&ensp;'
+        submit_cell.appendChild(span)
+        submit_cell.appendChild(open_ety)
         span = document.createElement('span')
         span.innerHTML = '&ensp;'
         submit_cell.appendChild(span)
@@ -252,6 +264,11 @@ export class Screen {
 
     open_google(word) {
         window.open(`https://www.google.com/search?q=${word}+definition`)
+        return false
+    }
+
+    open_etymology(word) {
+        window.open(`https://www.etymonline.com/search?q=${word}&type=0`)
         return false
     }
 
