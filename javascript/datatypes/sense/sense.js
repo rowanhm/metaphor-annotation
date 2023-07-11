@@ -222,7 +222,7 @@ export class Sense {
         known.appendChild(checkbox)
         known.style.color = 'grey'
         let that = this
-        known.onclick = function () {
+        checkbox.onclick = function () {
             that.known = !that.known
             that.lemma.update_word_known()
         }
