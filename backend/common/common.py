@@ -143,7 +143,14 @@ def save_csv(file, all_lines, encoding=None):
 
 def save_json(file, dictionary):
     with open(file, "w") as fp:
-        json.dump(dictionary, fp)
+        json.dump(dictionary, fp, indent=4)
+
+
+def open_json(file):
+    with open(file, "r") as fp:
+        dictionary = json.load(fp)
+    return dictionary
+
 
 def strip_surrounding_whitespace(string):
     return string.lstrip().rstrip()
