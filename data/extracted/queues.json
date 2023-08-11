@@ -3,6 +3,7 @@
         "avatar:noun:1",
         "fervor:noun:1",
         "fez:noun:1",
+        "distillation:noun:1",
         "boomerang:noun:1",
         "chlamys:noun:1",
         "cockpit:noun:1",
@@ -1933,7 +1934,7 @@
     "ojc42:4002": [
         "looking:noun:1",
         "litany:noun:1",
-        "tuft:noun:1",
+        "lunatic:noun:1",
         "splendour:noun:1",
         "anthrax:noun:1",
         "perseverance:noun:1",
@@ -4307,8 +4308,6 @@
         "pigment:noun:1"
     ],
     "wl399:4100": [
-        "lunatic:noun:1",
-        "distillation:noun:1",
         "contralto:noun:1",
         "historiography:noun:1",
         "imbalance:noun:1",
