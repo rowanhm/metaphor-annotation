@@ -1,7 +1,8 @@
 from collections import defaultdict
 from nltk.corpus import wordnet as wn
+from nltk.corpus.reader import WordNetError
 
-from backend.common.common import info, save_pickle
+from backend.common.common import info, save_pickle, warn
 from backend.common.global_variables import lemmas_to_senses_py_file, pos_map
 
 assert wn.get_version() == '3.0'
@@ -16,7 +17,13 @@ for synset in wn.all_synsets():
         wordform = word.name()
         index = 1
 
-        lemmas_to_senses[f'{wordform.lower()}:{pos}:{index}'].add(sense_id)
+        # Check the sense is fine
+        try:
+            wn.lemma_from_key(sense_id)
+            lemmas_to_senses[f'{wordform.lower()}:{pos}:{index}'].add(sense_id)
+        except WordNetError:
+            warn(f'{sense_id} not safe; skipping')
+
 
 info('Ordering')
 lemmas_to_senses_ordered = {}

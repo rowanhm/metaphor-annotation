@@ -174,8 +174,8 @@ info(f'POS breakdown: {[(pos, len(lemmas)) for pos, lemmas in pos_dict.items()]}
 
 NUM_ANNOTATORS = len(ANNOTATOR_CODES)
 total_words = sum([((total-shared)*NUM_ANNOTATORS)+shared for total, shared in NUM_WORDS])
-info(f'Sample most frequent {total_words} noun lemmas')
 lemmas = pos_dict['noun']  # list of (word, num_senses, freq)
+info(f'Sample most frequent {total_words}/{len(lemmas)} noun lemmas')
 
 
 def weighted_sample_without_replacement(population, weights, k):
